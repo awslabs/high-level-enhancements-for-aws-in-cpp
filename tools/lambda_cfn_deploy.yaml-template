@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Template for enhanced lambda deployments
+Resources: 
+  Add:
+      Type: AWS::Serverless::Function
+      Properties:
+        Description: %%function_name%% function
+        FunctionName: %%function_name%%
+        Handler: Add
+        MemorySize: 128
+        Role: arn:aws:iam::%%account%%:role/%%iam_role%%
+        Runtime: provided
+        Timeout: 15
+        CodeUri: build/%%function_name%%.zip

@@ -1,0 +1,10 @@
+/**
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#define AWSLABS_ENHANCED_CPP_VERSION_STRING "@awslabs-enhanced-cpp_VERSION_STRING@"
+#define AWSLABS_ENHANCED_CPP_VERSION_MAJOR @awslabs-enhanced-cpp_VERSION_MAJOR@
+#define AWSLABS_ENHANCED_CPP_VERSION_MINOR @awslabs-enhanced-cpp_VERSION_MINOR@
+#define AWSLABS_ENHANCED_CPP_VERSION_PATCH @awslabs-enhanced-cpp_VERSION_PATCH@
+#define AWSLABS_ENHANCED_CPP_GIT_HASH "@awslabs-enhanced-cpp_GIT_HASH@"
