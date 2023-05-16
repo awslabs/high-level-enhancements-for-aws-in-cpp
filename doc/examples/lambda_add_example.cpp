@@ -7,6 +7,7 @@
 #include "awslabs/enhanced/lambda_client.h"
 #include "awslabs/enhanced/Aws.h"
 
+using namespace AwsLabs::Enhanced;
 AwsApi api;
 AwsLogging awsLogging(Aws::Utils::Logging::LogLevel::Trace, "enhanced_lambda_");
 EnhancedLambdaClient client;
