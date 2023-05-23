@@ -10,6 +10,7 @@ The SDK is a set of libraries to interface smoothly standard C++ libraries with 
 - A CLI tool to upload and setup standard C++ functions in AWS Lambda to be called from the client Application. 
 ## Requirements
 #### For users
+- `zip`
 - [CMake 3.15+](https://cmake.org/)
 - [AWS SDK for C++ 1.9+](https://github.com/aws/aws-sdk-cpp)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) for uploading the AWS Lambda functions.

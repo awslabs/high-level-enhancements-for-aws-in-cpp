@@ -4,10 +4,10 @@
 cmake_minimum_required(VERSION 3.15)
 
 # -- Preamble --
-project("awslabs_enhanced_cpp_examples"
+project("awslabs_lambda_test"
         LANGUAGES CXX
         VERSION "0.1.0"
-        DESCRIPTION "High-level enhanced for AWS in C++ examples."
+        DESCRIPTION "Test Lambda"
         )
 
 # -- Project wide setup --
@@ -51,25 +51,25 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(alpaca)
 
-# Add S3 examples
-add_subdirectory(s3stream)
-
 # -- Targets --
 # Lambda addition example
-add_executable(lambda_add lambda_add_example.cpp)
+#[[add_executable(lambda_add lambda_add_example.cpp)
 target_link_libraries(lambda_add
         PRIVATE
+        tl::expected
         awslabs_enhanced_cpp::headers
         AWS::aws-lambda-runtime
-        aws-cpp-sdk-lambda
+        aws-cpp-sdk-lambda aws-cpp-sdk-core
         alpaca
-        )
+        )]]
 
 add_executable(lambda_add_fn lambda_add_fn.cpp)
 target_link_libraries(lambda_add_fn
         PRIVATE
+        tl::expected
         awslabs_enhanced_cpp::headers
         AWS::aws-lambda-runtime
+        aws-cpp-sdk-core
         alpaca
         )
 # Lambda rr example
@@ -85,3 +85,4 @@ set(CPACK_PROJECT_VERSION ${CMAKE_PROJECT_VERSION})
 include(CPack)
 
 aws_lambda_package_target(lambda_add_fn)
+ 

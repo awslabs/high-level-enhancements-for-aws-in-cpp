@@ -23,6 +23,8 @@ namespace expns = tl;
 using Aws::Utils::Json::JsonValue;
 using namespace std::string_literals;
 #define BIND_AWS_LAMBDA(client, f, name) client.bind_lambda<decltype(f)>(name)
+
+namespace AwsLabs::Enhanced {
 struct EnhancedLambdaClient;
 
 template<typename Sig>
@@ -180,5 +182,5 @@ struct Lambda<R(Args...)> {
   EnhancedLambdaClient &client;
   std::string name;
 };
-
+}
 #endif

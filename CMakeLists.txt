@@ -70,6 +70,7 @@ target_include_directories(headers INTERFACE
         )
 
 target_compile_features(headers INTERFACE cxx_std_20)
+target_link_libraries(headers INTERFACE tl::expected aws-cpp-sdk-core)
 
 # -- Tests, doc and packaging if running this as top project --
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
