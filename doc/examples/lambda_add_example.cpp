@@ -11,11 +11,12 @@ using namespace AwsLabs::Enhanced;
 AwsApi api;
 AwsLogging awsLogging(Aws::Utils::Logging::LogLevel::Trace, "enhanced_lambda_");
 EnhancedLambdaClient client;
-namespace foo {
-int add(int, int);
+
+namespace lambda_declarations {
+    int add(int, int);
 }
-auto add = BIND_AWS_LAMBDA(client, foo::add, "Add");
-//auto add = client.bind_lambda<int(int, int)>("add");
+
+auto add = BIND_AWS_LAMBDA(client, lambda_declarations::add, "Add");
 
 int main(int argc, char **argv)
 {

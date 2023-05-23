@@ -96,6 +96,10 @@ install(
         DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME deploy_cpp_lambda_fn
 )
 
+install(
+        PROGRAMS tools/cli_deploy_cpp_lambda.sh
+        DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME cli_deploy_cpp_lambda
+)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -112,3 +116,4 @@ install(
 )
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/awslabs DESTINATION include)
+

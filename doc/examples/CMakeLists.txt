@@ -85,3 +85,30 @@ set(CPACK_PROJECT_VERSION ${CMAKE_PROJECT_VERSION})
 include(CPack)
 
 aws_lambda_package_target(lambda_add_fn)
+
+add_executable(exp_mean_fn exp_mean.cpp)
+target_link_libraries(exp_mean_fn
+        PRIVATE
+        awslabs_enhanced_cpp::headers
+        AWS::aws-lambda-runtime
+        alpaca
+        )
+target_compile_definitions(exp_mean_fn  PRIVATE AWS_LAMBDA)
+aws_lambda_package_target(exp_mean_fn)
+
+FetchContent_Declare(
+  cxxopts
+  GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+  GIT_TAG v3.0.0  
+)
+FetchContent_MakeAvailable(cxxopts)
+
+add_executable(central_limit_theorem central_limit_theorem.cpp exp_mean.cpp)
+target_link_libraries(central_limit_theorem
+        PRIVATE
+        awslabs_enhanced_cpp::headers
+        AWS::aws-lambda-runtime
+        aws-cpp-sdk-lambda
+        cxxopts
+        alpaca
+        )
