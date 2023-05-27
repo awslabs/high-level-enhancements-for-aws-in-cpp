@@ -103,12 +103,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cxxopts)
 
+FetchContent_Declare(fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(fmt)
+
 add_executable(central_limit_theorem central_limit_theorem.cpp exp_mean.cpp)
 target_link_libraries(central_limit_theorem
         PRIVATE
         awslabs_enhanced_cpp::headers
         AWS::aws-lambda-runtime
         aws-cpp-sdk-lambda
+        fmt
         cxxopts
         alpaca
         )
