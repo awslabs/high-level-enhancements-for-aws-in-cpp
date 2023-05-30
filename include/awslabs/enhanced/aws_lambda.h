@@ -43,74 +43,7 @@ struct make_function<std::function<R(Ts...)>>
 template <typename Func>
 using make_function_t = typename make_function<Func>::type;
 
-namespace detail
-{
-  template <typename T>
-  T getArg(JsonValue, size_t idx);
-
-  template <>
-  bool getArg<bool>(JsonValue v, size_t idx)
-  {
-    return v.View().GetBool("key"s + std::to_string(idx));
-  }
-
-  template <>
-  double getArg<double>(JsonValue v, size_t idx)
-  {
-    return v.View().GetDouble("key"s + std::to_string(idx));
-  }
-
-  template <>
-  int64_t getArg<int64_t>(JsonValue v, size_t idx)
-  {
-    return v.View().GetInt64("key"s + std::to_string(idx));
-  }
-
-  template <>
-  int getArg<int>(JsonValue v, size_t idx)
-  {
-    return v.View().GetInteger("key"s + std::to_string(idx));
-  }
-
-  template <>
-  std::string getArg<std::string>(JsonValue v, size_t idx)
-  {
-    return v.View().GetString("key"s + std::to_string(idx));
-  }
-
-  template <size_t... I, typename R, typename... Args>
-  R call_helper(std::index_sequence<I...>,
-                std::function<R(Args...)> const &f, invocation_request const &req)
-  {
-    JsonValue v = req.payload;
-    return f(getArg<Args>(v, I)...);
-  };
-
-  void putValue(JsonValue &v, bool b)
-  {
-    v.WithBool("value", b);
-  }
-
-  void putValue(JsonValue &v, double d)
-  {
-    v.WithDouble("value", d);
-  }
-
-  void putValue(JsonValue &v, int64_t i)
-  {
-    v.WithInt64("value", i);
-  }
-
-  void putValue(JsonValue &v, int i)
-  {
-    v.WithInteger("value", i);
-  }
-
-  void putValue(JsonValue &v, std::string s)
-  {
-    v.WithString("value", s);
-  }
-
+namespace Detail {
   template <typename R>
   invocation_response makeResponse(R const &r)
   {
@@ -207,7 +140,7 @@ struct Handler
 
   invocation_response operator()(invocation_request const &req)
   {
-    return detail::respond(func, req);
+    return Detail::respond(func, req);
   }
   Func func;
 };

@@ -49,99 +49,7 @@ struct EnhancedLambdaClient {
   std::unique_ptr <Aws::Lambda::LambdaClient> client;
 };
 
-void with(JsonValue &payload, std::string key, std::string value) {
-  payload.WithString(key, value);
-};
 
-void with(JsonValue &payload, std::string key, bool value) {
-  payload.WithBool(key, value);
-};
-
-void with(JsonValue &payload, std::string key, double value) {
-  payload.WithDouble(key, value);
-};
-
-void with(JsonValue &payload, std::string key, int64_t value) {
-  payload.WithInt64(key, value);
-};
-
-void with(JsonValue &payload, std::string key, int value) {
-  payload.WithInteger(key, value);
-};
-
-template<typename ...Args> struct MarshallArgs {
-  template<std::size_t ...I>
-  auto impl(std::index_sequence<I...> i, Args... args) {
-    JsonValue payload;
-    ((with(payload, "key"s + std::to_string(I), args)), ...);
-    return payload;
-  }
-  auto operator()(Args ...args) {
-    return impl(std::make_index_sequence<sizeof...(Args)>(), args...);
-  }
-};
-
-template<>
-struct MarshallArgs<Aws::Utils::Json::JsonValue> {
-  auto operator()(Aws::Utils::Json::JsonValue val) {
-    return val;
-  }
-};
-
-template<typename Sig>
-struct Lambda;
-
-template<typename T> struct Getter;
-
-template<>
-struct Getter<JsonValue> {
-  JsonValue operator()(JsonValue r) {
-    return r;
-  }
-};
-
-template<>
-struct Getter<bool> {
-  bool operator()(JsonValue r) {
-    return r.View().GetBool("value"s);
-  }
-};
-
-template<>
-struct Getter<double> {
-  double operator()(JsonValue r) {
-    return r.View().GetDouble("value"s);
-  }
-};
-
-template<>
-struct Getter<int64_t> {
-  int64_t operator()(JsonValue r) {
-    return r.View().GetInt64("value"s);
-  }
-};
-
-template<>
-struct Getter<int> {
-  int operator()(JsonValue r) {
-    return r.View().GetInteger("value"s);
-  }
-};
-
-template<>
-struct Getter<std::string> {
-  std::string operator()(JsonValue r) {
-    return r.View().GetString("value"s);
-  }
-};
-
-// Precondition: Not an error
-template<typename R>
-struct Getter<expns::expected < R, std::string>> {
-expns::expected <R, std::string> operator()(JsonValue r) {
-  return Getter<R>{}(r);
-}
-};
 
 template<typename R>
 struct HandleFunctionError {
@@ -152,10 +60,12 @@ struct HandleFunctionError {
 
 template<typename R>
 struct HandleFunctionError<expns::expected < R, std::string>> {
-expns::expected <R, std::string> operator()(JsonValue v) {
-  return expns::unexpected(v.View().GetString("errorMessage"));
-}
+  expns::expected <R, std::string> operator()(JsonValue v) {
+    return expns::unexpected(v.View().GetString("errorMessage"));
+  }
 };
+
+template<typename Sig> struct Lambda;
 
 template<typename R, typename ...Args>
 struct Lambda<R(Args...)> {
