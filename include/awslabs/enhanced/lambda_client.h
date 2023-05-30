@@ -9,10 +9,18 @@
 #include <aws/lambda/LambdaClient.h>
 #include <aws/lambda/model/InvokeRequest.h>
 #include <aws/core/Aws.h>
+#include <aws/core/utils/Array.h>
+#include <aws/core/utils/base64/Base64.h>
+#include <aws/core/utils/HashingUtils.h>
 #include <string>
 #include <stdexcept>
 #include <iostream>
 #include <utility>
+#include <future>
+#include <tuple>
+#include "detail/lambda_detail.h"
+
+#include <alpaca/alpaca.h>
 #ifdef __cpp_lib_expected
 #include <expected>
 namespace expns = std;
@@ -156,10 +164,20 @@ struct Lambda<R(Args...)> {
   R handleSuccessfulInvocation(Aws::Lambda::Model::InvokeResult &result) {
     Aws::IOStream &payload = result.GetPayload();
     // h/t https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring
-    std::string ret(std::istreambuf_iterator<char>(payload), {});
+    Aws::String ret(std::istreambuf_iterator<char>(payload), {});
+
     if (result.GetFunctionError().length())
       return HandleFunctionError<R>{}(ret);
-    return Getter<R>{}(ret);
+    JsonValue retAsJson(ret);
+    Aws::Utils::ByteBuffer bb = Aws::Utils::HashingUtils::Base64Decode(retAsJson.View().GetString("value"));
+    static_assert(sizeof(uint8_t) == sizeof(unsigned char), "Platform breaks our assumption that characters are 8 bits");
+    std::vector<uint8_t> bytes(reinterpret_cast<uint8_t *>(bb.GetUnderlyingData()),
+                               reinterpret_cast<uint8_t *>(bb.GetUnderlyingData() + bb.GetLength()));
+    std::error_code ec;
+    auto resultHolder = alpaca::deserialize<Detail::ResultHolder<R>>(bytes, ec);
+    if(ec) 
+      throw std::runtime_error("Deserialization error code: " + ec.message());
+    return resultHolder.result;
   }
 
   R operator()(Args... args) {
@@ -167,17 +185,23 @@ struct Lambda<R(Args...)> {
     invokeRequest.SetFunctionName(name);
     invokeRequest.SetInvocationType(Aws::Lambda::Model::InvocationType::RequestResponse);
     invokeRequest.SetLogType(Aws::Lambda::Model::LogType::Tail);
+    Detail::ArgsHolder argsHolder(std::tuple(args...));
+    std::vector<uint8_t> bytes;
+    auto bytes_written = alpaca::serialize(argsHolder, bytes);
+    static_assert(sizeof(uint8_t) == sizeof(unsigned char), "Platform breaks our assumption that characters are 8 bits");
+    Aws::Utils::ByteBuffer byteBuffer(reinterpret_cast<unsigned char *>(&bytes.front()), bytes_written);
     Aws::Utils::Json::JsonValue jsonPayload;
+    jsonPayload.WithString("serialized",  Aws::Utils::HashingUtils::Base64Encode(byteBuffer));
+
     std::shared_ptr <Aws::IOStream> payload
-        =
-        Aws::MakeShared<Aws::StringStream>("lambda argument", MarshallArgs<Args...>()(args...).View().WriteReadable());
+        = Aws::MakeShared<Aws::StringStream>("lambda argument", jsonPayload.View().WriteReadable());
     invokeRequest.SetBody(payload);
     invokeRequest.SetContentType("application/json");
     auto outcome = client.client->Invoke(invokeRequest);
     if (outcome.IsSuccess())
       return handleSuccessfulInvocation(outcome.GetResult());
     Aws::Lambda::LambdaError e = outcome.GetError();
-    throw std::runtime_error("failure");
+    throw std::runtime_error(e.GetMessage());
   }
   EnhancedLambdaClient &client;
   std::string name;

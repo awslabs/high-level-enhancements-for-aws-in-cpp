@@ -78,6 +78,13 @@ add_executable(test_lambda_add test_lambda_add.cpp)
 target_link_libraries(test_lambda_add
         GTest::gtest_main
         awslabs_enhanced_cpp::headers
-        aws-cpp-sdk-lambda)
+        aws-cpp-sdk-lambda
+        tl::expected
+        alpaca
+        ${AWSSDK_LINK_LIBRARIES}
+        ${AWSSDK_PLATFORM_DEPS})
 
 gtest_discover_tests(test_lambda_add PROPERTIES DEPENDS deploy_test_lambda_add_fn)
+
+# add_executable(test_alpaca test_alpaca.cpp)
+# target_link_libraries(test_alpaca alpaca)

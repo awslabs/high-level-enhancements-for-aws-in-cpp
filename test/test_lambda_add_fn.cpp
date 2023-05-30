@@ -4,6 +4,7 @@
  */
 
 #include "awslabs/enhanced/aws_lambda.h"
+using namespace AwsLabs::Enhanced;
 
 int add(int i, int j) { return i + j; }
 

@@ -7,6 +7,7 @@
 
 #include <aws/lambda-runtime/runtime.h>
 #include <aws/core/utils/json/JsonSerializer.h>
+#include <aws/core/utils/HashingUtils.h>
 #include <functional>
 #include <stdexcept>
 #ifdef __cpp_lib_expected
@@ -19,10 +20,14 @@ namespace expns = tl;
 #include <string>
 #include <utility>
 #include <sstream>
+#include <alpaca/alpaca.h>
+
 using namespace aws::lambda_runtime;
 using namespace std::string_literals;
 using Aws::Utils::Json::JsonValue;
+#include "detail/lambda_detail.h"
 
+namespace AwsLabs::Enhanced {
 template <typename Func>
 struct make_function
 {
@@ -119,12 +124,35 @@ namespace detail
     return ir;
   }
 
+  template<typename R>
+  invocation_response makeBase64Response(R const &r)
+  {
+    Detail::ResultHolder<R> resultHolder(r);
+    JsonValue result;
+    std::vector<uint8_t> bytes;
+    auto bytes_written = alpaca::serialize(resultHolder, bytes);
+    static_assert(sizeof(uint8_t) == sizeof(unsigned char), "Platform breaks our assumption that characters are 8 bits");
+    Aws::Utils::ByteBuffer byteBuffer(reinterpret_cast<unsigned char *>(&bytes.front()), bytes_written);
+    result.WithString("value",  Aws::Utils::HashingUtils::Base64Encode(byteBuffer));
+    return invocation_response::success(result.View().WriteReadable(), "application/json");
+  }
+
   template <typename R, typename... Args>
   invocation_response call(std::function<R(Args...)> const &f,
                            invocation_request const &req)
   {
-    JsonValue result;
-    return makeResponse(call_helper(std::make_index_sequence<sizeof...(Args)>(), f, req));
+    static_assert(sizeof(uint8_t) == sizeof(unsigned char), "Platform breaks our assumption that characters are 8 bits");
+    JsonValue v = req.payload;
+    Aws::Utils::ByteBuffer bb = Aws::Utils::HashingUtils::Base64Decode(v.View().GetString("serialized"));
+    std::vector<uint8_t> bytes(reinterpret_cast<uint8_t *>(bb.GetUnderlyingData()),
+                               reinterpret_cast<uint8_t *>(bb.GetUnderlyingData() + bb.GetLength()));
+    std::error_code ec;
+    auto argsHolder = alpaca::deserialize<Detail::ArgsHolder<Args...>>(bytes, ec);
+    if(ec) 
+      throw std::runtime_error("Deserialization error code: " + ec.message());
+
+
+    return makeBase64Response(std::apply(f, argsHolder.tup));
   };
 
   template <typename R>
@@ -186,6 +214,7 @@ struct Handler
 
 template <typename Func>
 Handler(Func) -> Handler<make_function_t<Func>>;
+}
 
 int main()
 {
