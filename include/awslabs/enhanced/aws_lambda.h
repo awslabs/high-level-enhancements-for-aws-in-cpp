@@ -80,12 +80,13 @@ namespace Detail {
     std::vector<uint8_t> bytes(reinterpret_cast<uint8_t *>(bb.GetUnderlyingData()),
                                reinterpret_cast<uint8_t *>(bb.GetUnderlyingData() + bb.GetLength()));
     std::error_code ec;
-    auto argsHolder = alpaca::deserialize<Detail::ArgsHolder<Args...>>(bytes, ec);
+    // Dummy arguments address https://github.com/p-ranav/alpaca/issues/22#issuecomment-1569568081
+
+    auto argsHolder = alpaca::deserialize<Detail::ArgsHolder<int, int, Args...>>(bytes, ec);
     if(ec) 
       throw std::runtime_error("Deserialization error code: " + ec.message());
 
-
-    return makeBase64Response(std::apply(f, argsHolder.tup));
+    return makeBase64Response(std::apply([&](int, int, auto...args) { return f(args...); }, argsHolder.tup));
   };
 
   template <typename R>

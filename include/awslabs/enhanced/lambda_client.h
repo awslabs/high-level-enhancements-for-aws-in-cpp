@@ -32,6 +32,11 @@ using Aws::Utils::Json::JsonValue;
 using namespace std::string_literals;
 #define BIND_AWS_LAMBDA(client, f, name) client.bind_lambda<decltype(f)>(name)
 
+namespace alpaca::detail {
+template<typename ...Ts>
+struct aggregate_arity<std::tuple<Ts...>> : std::make_index_sequence<sizeof...(Ts)> {};
+}
+
 namespace AwsLabs::Enhanced {
 struct EnhancedLambdaClient;
 
@@ -95,14 +100,14 @@ struct Lambda<R(Args...)> {
     invokeRequest.SetFunctionName(name);
     invokeRequest.SetInvocationType(Aws::Lambda::Model::InvocationType::RequestResponse);
     invokeRequest.SetLogType(Aws::Lambda::Model::LogType::Tail);
-    Detail::ArgsHolder argsHolder(std::tuple(args...));
+    // Add dummy args to work around https://github.com/p-ranav/alpaca/issues/22#issuecomment-1569568081 
+    Detail::ArgsHolder argsHolder(std::tuple(0, 0, args...));
     std::vector<uint8_t> bytes;
     auto bytes_written = alpaca::serialize(argsHolder, bytes);
     static_assert(sizeof(uint8_t) == sizeof(unsigned char), "Platform breaks our assumption that characters are 8 bits");
     Aws::Utils::ByteBuffer byteBuffer(reinterpret_cast<unsigned char *>(&bytes.front()), bytes_written);
     Aws::Utils::Json::JsonValue jsonPayload;
     jsonPayload.WithString("serialized",  Aws::Utils::HashingUtils::Base64Encode(byteBuffer));
-
     std::shared_ptr <Aws::IOStream> payload
         = Aws::MakeShared<Aws::StringStream>("lambda argument", jsonPayload.View().WriteReadable());
     invokeRequest.SetBody(payload);
