@@ -3,6 +3,7 @@
 #include <map>
 #include <random>
 #include <string>
+#include <execution>
 #include "exp_mean.h"
 #include "awslabs/enhanced/lambda_client.h"
 #include "awslabs/enhanced/Aws.h"
@@ -19,6 +20,8 @@ using std::tuple;
 using std::string;
 using std::ostream;
 using std::cout;
+using std::cerr;
+using namespace std::execution;
 using namespace AwsLabs::Enhanced;
 
 
@@ -30,11 +33,13 @@ auto cloud_exp_mean = BIND_AWS_LAMBDA(client, exp_mean, "exp_mean");
 
 struct opts {
     double lambda;
-    int samples;
-    int experiments;
+    unsigned samples;
+    unsigned experiments;
     bool cloud;
+    string policy;
 };
 
+// Get command line options
 auto get_opts(int argc, char *argv[])
 {
     cxxopts::Options options("central limit theorem", "Leverage the cloud to test the central limit theorem for the (far from normal) exponential distribution");
@@ -42,18 +47,22 @@ auto get_opts(int argc, char *argv[])
         ("l,lambda", "Lambda parameter for exponential distribution", 
          cxxopts::value<double>()->default_value("1"))
         ("s,samples", "Number of samples in each experiment", 
-          cxxopts::value<int>()->default_value("1"))
+          cxxopts::value<unsigned>()->default_value("1"))
         ("e,experiments", "Number of experiments to perform",
-         cxxopts::value<int>()->default_value("1000"))
+         cxxopts::value<unsigned>()->default_value("1000"))
         ("c,cloud", "Run in the cloud",
-         cxxopts::value<bool>()->default_value("false"));
+         cxxopts::value<bool>()->default_value("false"))
+        ("p,policy", "seq (default) - std::execution::seq, par - std::execution::par",
+         cxxopts::value<string>()->default_value("seq"));
     auto result = options.parse(argc, argv);
     return opts(result["lambda"].as<double>(),
-                result["samples"].as<int>(),
-                result["experiments"].as<int>(),
-                result["cloud"]. as<bool>());
+                result["samples"].as<unsigned>(),
+                result["experiments"].as<unsigned>(),
+                result["cloud"].as<bool>(),
+                result["policy"].as<string>());
 }
 
+// Print results as a histogram
 struct scaled_hist {
     scaled_hist(vector<double> const &vals) {
         auto [min_val, max_val] = std::minmax_element(vals.begin(), vals.end());
@@ -77,17 +86,31 @@ struct scaled_hist {
     map<int, unsigned> hist;
 };
 
+// The actual code
+void run_test(auto policy, opts const &o)
+{
+    vector<exp_parameters> specification( o.experiments, { o.lambda, o.samples});
+    vector<double> means(o.experiments);
+
+    if(o.cloud)
+        transform(policy, specification.begin(), specification.end(), means.begin(), cloud_exp_mean);
+    else
+        transform(policy, specification.begin(), specification.end(), means.begin(), exp_mean);
+
+    cout << scaled_hist(means);
+
+}
 
 int main(int argc, char *argv[])
 {
     opts o = get_opts(argc, argv);
- 
-    vector<double> means(o.experiments);
-    if(o.cloud)
-        generate(means.begin(), means. end(), [&] {return cloud_exp_mean(o.lambda, o.samples); });
+    if(o.policy == "seq")
+        run_test(seq, o);
+    else if (o.policy == "par")
+        run_test(par, o);
+    else if (o.policy == "par_unseq")
+        run_test(par_unseq, o);
     else
-        generate(means.begin(), means.end(), [&] {return exp_mean(o.lambda, o.samples); });
-
-    cout << scaled_hist(means);
+        cerr << format("Invalid execution policy: {}", o.policy);
     return 0;
 }
