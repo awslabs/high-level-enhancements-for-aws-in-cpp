@@ -157,5 +157,15 @@ struct Lambda<R(Args...)> {
   EnhancedLambdaClient &client;
   std::string name;
 };
+
+#if 0
+// In process
+enum class cloud_launch {
+  cloud
+};
+template<typename R, typename ...Args>
+std::future<R>
+async(cloud_launch, Lambda<R(Args...)>)
 }
+#endif
 #endif
