@@ -166,6 +166,7 @@ enum class cloud_launch {
 template<typename R, typename ...Args>
 std::future<R>
 async(cloud_launch, Lambda<R(Args...)>)
-}
 #endif
+}
+
 #endif
