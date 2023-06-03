@@ -109,13 +109,19 @@ FetchContent_Declare(fmt
 )
 FetchContent_MakeAvailable(fmt)
 
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 add_executable(central_limit_theorem central_limit_theorem.cpp exp_mean.cpp)
 target_link_libraries(central_limit_theorem
         PRIVATE
         awslabs_enhanced_cpp::headers
         AWS::aws-lambda-runtime
+        alpaca
         aws-cpp-sdk-lambda
         fmt
         cxxopts
-        alpaca
+        Threads::Threads
+        tbb
         )

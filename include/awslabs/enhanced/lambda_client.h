@@ -17,6 +17,7 @@
 #include <iostream>
 #include <utility>
 #include <future>
+#include <iterator>
 #include <tuple>
 #include "detail/lambda_detail.h"
 
@@ -77,7 +78,7 @@ struct Lambda<R(Args...)> {
   Lambda(EnhancedLambdaClient &client, std::string name)
       : client(client), name(name) {}
 
-  R handleSuccessfulInvocation(Aws::Lambda::Model::InvokeResult const &result) {
+  static R handleSuccessfulInvocation(Aws::Lambda::Model::InvokeResult const &result) {
     Aws::IOStream &payload = result.GetPayload();
     // h/t https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring
     Aws::String ret(std::istreambuf_iterator<char>(payload), {});
@@ -96,7 +97,7 @@ struct Lambda<R(Args...)> {
     return resultHolder.result;
   }
 
-  expns::expected <R, std::string> outcomeToExpected(Aws::Lambda::Model::InvokeOutcome const &outcome) {
+  static expns::expected <R, std::string> outcomeToExpected(Aws::Lambda::Model::InvokeOutcome const &outcome) {
     if(outcome.IsSuccess()) 
       return handleSuccessfulInvocation(outcome.GetResult());
     else
@@ -147,7 +148,7 @@ struct Lambda<R(Args...)> {
     invokeRequest.SetContentType("application/json");
     client.client->InvokeAsync(
       invokeRequest, 
-      [&](const Aws::Lambda::LambdaClient*, const Aws::Lambda::Model::InvokeRequest&, 
+      [c](const Aws::Lambda::LambdaClient*, const Aws::Lambda::Model::InvokeRequest&, 
           Aws::Lambda::Model::InvokeOutcome outcome, 
           const std::shared_ptr<const Aws::Client::AsyncCallerContext>&) {
         c(outcomeToExpected(outcome));
@@ -158,15 +159,37 @@ struct Lambda<R(Args...)> {
   std::string name;
 };
 
-#if 0
+
 // In process
 enum class cloud_launch {
   cloud
 };
 template<typename R, typename ...Args>
-std::future<R>
-async(cloud_launch, Lambda<R(Args...)>)
-#endif
+auto
+async(cloud_launch, Lambda<R(Args...)> l, Args ...args) {
+    auto p=std::make_shared<std::promise<R>>();
+    auto f = p->get_future();
+    l.invoke_async([p](expns::expected<R, std::string> e) { 
+      try {
+        p->set_value(e.value());
+      } catch (...) {
+        try {
+          p->set_exception(std::current_exception());
+        } catch(...) {}
+      }}, args...);
+    return f;
+}
+
+template<typename InpIt, typename OutIt, typename R, typename ...Args>
+auto
+transform(cloud_launch, InpIt beg, InpIt end, OutIt out, Lambda<R(Args...)> l)
+{
+  std::vector<std::future<R>> futures;
+  std::transform(beg, end, std::back_inserter(futures), [&](auto x) { 
+    return async(cloud_launch::cloud, l, x); 
+    });
+  return std::transform(futures.begin(), futures.end(), out, [](auto &x) { return x.get(); });
+}
 }
 
 #endif

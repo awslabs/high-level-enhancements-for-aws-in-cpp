@@ -24,7 +24,13 @@ TEST_F(lambdaIntegrationTest, TestCall) {
     EXPECT_EQ(add(1, 3), 4);
 }
 
-TEST_F(lambdaIntegrationTest, TestAsyncCall) {
+TEST_F(lambdaIntegrationTest, TestAsync) {
+  auto add = BIND_AWS_LAMBDA(client, LambdaDecls::add, "test_lambda_add_fn");
+  auto f = async(AwsLabs::Enhanced::cloud_launch::cloud, add, 3, 5);
+  EXPECT_EQ(f.get(), 8);
+}
+
+TEST_F(lambdaIntegrationTest, TestInvokeAsync) {
     auto add = BIND_AWS_LAMBDA(client, LambdaDecls::add, "test_lambda_add_fn");
     std::promise<expected<int, std::string>> p;
     auto f = p.get_future();

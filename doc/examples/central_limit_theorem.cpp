@@ -3,7 +3,9 @@
 #include <map>
 #include <random>
 #include <string>
+#include <algorithm>
 #include <execution>
+#include <functional>
 #include "exp_mean.h"
 #include "awslabs/enhanced/lambda_client.h"
 #include "awslabs/enhanced/Aws.h"
@@ -21,13 +23,25 @@ using std::string;
 using std::ostream;
 using std::cout;
 using std::cerr;
+using std::transform;
+using std::function;
 using namespace std::execution;
 using namespace AwsLabs::Enhanced;
 
 
 AwsApi api;
 AwsLogging awsLogging(Aws::Utils::Logging::LogLevel::Trace, "enhanced_lambda_");
+#ifdef THREAD_POOL
+auto clientConfig = []() {
+    Aws::Client::ClientConfiguration config;
+    config.executor = Aws::MakeShared<Aws::Utils::Threading::PooledThreadExecutor>("clt", 100);
+    return config;
+}();
+
+EnhancedLambdaClient client(clientConfig);
+#else
 EnhancedLambdaClient client;
+#endif
 
 auto cloud_exp_mean = BIND_AWS_LAMBDA(client, exp_mean, "exp_mean");
 
@@ -87,29 +101,33 @@ struct scaled_hist {
 };
 
 // The actual code
-void run_test(auto policy, opts const &o)
+void run_test(auto policy, opts const &o, auto f)
 {
     vector<exp_parameters> specification( o.experiments, { o.lambda, o.samples});
     vector<double> means(o.experiments);
 
-    if(o.cloud)
-        transform(policy, specification.begin(), specification.end(), means.begin(), cloud_exp_mean);
-    else
-        transform(policy, specification.begin(), specification.end(), means.begin(), exp_mean);
+    transform(policy, specification.begin(), specification.end(), means.begin(), f);
 
     cout << scaled_hist(means);
 
 }
 
+
+
 int main(int argc, char *argv[])
 {
     opts o = get_opts(argc, argv);
     if(o.policy == "seq")
-        run_test(seq, o);
+        if(o.cloud)
+            run_test(seq, o, cloud_exp_mean);
+        else
+            run_test(seq, o, exp_mean);
     else if (o.policy == "par")
-        run_test(par, o);
+        run_test(par, o, exp_mean);
     else if (o.policy == "par_unseq")
-        run_test(par_unseq, o);
+        run_test(par_unseq, o, exp_mean);
+    else if (o.policy == "cloud_launch")
+        run_test(cloud_launch::cloud, o, cloud_exp_mean);
     else
         cerr << format("Invalid execution policy: {}", o.policy);
     return 0;

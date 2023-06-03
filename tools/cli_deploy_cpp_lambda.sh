@@ -11,4 +11,4 @@ IAM_ROLE=$2
 LAMBDA_PACK=$3
 
 aws lambda delete-function --function-name ${FUNCTION_NAME}
-aws lambda create-function --function-name ${FUNCTION_NAME} --role ${IAM_ROLE} --runtime provided --timeout 900 --memory-size 128 --handler ${FUNCTION_NAME} --zip-file fileb://${LAMBDA_PACK}
+aws lambda create-function --function-name ${FUNCTION_NAME} --role ${IAM_ROLE} --runtime provided --timeout 900 --memory-size 2038 --handler ${FUNCTION_NAME} --zip-file fileb://${LAMBDA_PACK}
