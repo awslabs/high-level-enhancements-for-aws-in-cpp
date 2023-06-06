@@ -46,6 +46,12 @@ struct Lambda;
 
 struct EnhancedLambdaClient {
   EnhancedLambdaClient(Aws::Client::ClientConfiguration config = {}) {
+    // Kludge that avoids silent poor concurrency. We want the default maximum
+    // concurrency to be lambda's default concurrency of 1000. If we
+    // see the built-in default of 25, we change it to 1000 on the reasonable
+    // assumption that it got the value by default rather than explicitly.
+    // Will create a more completely correct solution in the future.
+    if(config.maxConnections == 25) config.maxConnections = 1000;
     client = std::make_unique<Aws::Lambda::LambdaClient>(config);
   }
   template<typename Sig>
@@ -78,7 +84,7 @@ struct Lambda<R(Args...)> {
   Lambda(EnhancedLambdaClient &client, std::string name)
       : client(client), name(name) {}
 
-  static R handleSuccessfulInvocation(Aws::Lambda::Model::InvokeResult const &result) {
+  static R handleSuccessfulInvocation(Aws::Lambda::Model::InvokeResult &result) {
     Aws::IOStream &payload = result.GetPayload();
     // h/t https://stackoverflow.com/questions/3203452/how-to-read-entire-stream-into-a-stdstring
     Aws::String ret(std::istreambuf_iterator<char>(payload), {});
@@ -97,7 +103,7 @@ struct Lambda<R(Args...)> {
     return resultHolder.result;
   }
 
-  static expns::expected <R, std::string> outcomeToExpected(Aws::Lambda::Model::InvokeOutcome const &outcome) {
+  static expns::expected <R, std::string> outcomeToExpected(Aws::Lambda::Model::InvokeOutcome &outcome) {
     if(outcome.IsSuccess()) 
       return handleSuccessfulInvocation(outcome.GetResult());
     else
@@ -174,7 +180,7 @@ async(cloud_launch, Lambda<R(Args...)> l, Args ...args) {
         p->set_value(e.value());
       } catch (...) {
         try {
-          p->set_exception(std::current_exception());
+          p->set_exception(std::make_exception_ptr(std::runtime_error(e.error())));
         } catch(...) {}
       }}, args...);
     return f;
