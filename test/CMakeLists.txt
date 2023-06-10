@@ -44,47 +44,64 @@ gtest_discover_tests(is3stream_integration_tests)
 
 include(FetchContent)
 FetchContent_Declare(
-    alpaca
-    GIT_REPOSITORY https://github.com/p-ranav/alpaca.git
+        alpaca
+        GIT_REPOSITORY https://github.com/p-ranav/alpaca.git
 )
 FetchContent_MakeAvailable(alpaca)
 
-add_executable(test_lambda_add_fn test_lambda_add_fn.cpp)
-target_link_libraries(test_lambda_add_fn
-        PRIVATE
-        awslabs_enhanced_cpp::headers
-        AWS::aws-lambda-runtime
-        aws-cpp-sdk-core
-        alpaca
-        )
+# Mac does not support a lambda runtime but can be run
+# given a existing deployed lambda.
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    message(STATUS ${CMAKE_SYSTEM_NAME})
+    add_executable(test_lambda_add_fn test_lambda_add_fn.cpp)
+    target_link_libraries(test_lambda_add_fn
+            PRIVATE
+            awslabs_enhanced_cpp::headers
+            AWS::aws-lambda-runtime
+            aws-cpp-sdk-core
+            alpaca
+            )
 
-set(CPACK_PROJECT_NAME lambda_add)
-set(CPACK_PROJECT_VERSION ${CMAKE_PROJECT_VERSION})
-include(CPack)
+    set(CPACK_PROJECT_NAME lambda_add)
+    set(CPACK_PROJECT_VERSION ${CMAKE_PROJECT_VERSION})
+    include(CPack)
 
-aws_lambda_package_target(test_lambda_add_fn)
-add_custom_target(require_test_lambda_add_package ALL
-        DEPENDS aws-lambda-package-test_lambda_add_fn)
+    aws_lambda_package_target(test_lambda_add_fn)
+    add_custom_target(require_test_lambda_add_package ALL
+            DEPENDS aws-lambda-package-test_lambda_add_fn)
 
-add_test(
-        NAME deploy_test_lambda_add_fn
-        COMMAND ${CMAKE_COMMAND}
-                -DLAMBDA_NAME=test_lambda_add_fn
-                -DLAMBDA_EXECUTION_ROLE=${LAMBDA_EXECUTION_ROLE}
-                -P ${CMAKE_CURRENT_SOURCE_DIR}/redeploy_lambda.cmake
-)
+    add_test(
+            NAME deploy_test_lambda_add_fn
+            COMMAND ${CMAKE_COMMAND}
+            -DLAMBDA_NAME=test_lambda_add_fn
+            -DLAMBDA_EXECUTION_ROLE=${LAMBDA_EXECUTION_ROLE}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/redeploy_lambda.cmake
+    )
 
-add_executable(test_lambda_add test_lambda_add.cpp)
-target_link_libraries(test_lambda_add
-        GTest::gtest_main
-        awslabs_enhanced_cpp::headers
-        aws-cpp-sdk-lambda
-        tl::expected
-        alpaca
-        ${AWSSDK_LINK_LIBRARIES}
-        ${AWSSDK_PLATFORM_DEPS})
+    add_executable(test_lambda_add test_lambda_add.cpp)
+    target_link_libraries(test_lambda_add
+            GTest::gtest_main
+            awslabs_enhanced_cpp::headers
+            aws-cpp-sdk-lambda
+            tl::expected
+            alpaca
+            ${AWSSDK_LINK_LIBRARIES}
+            ${AWSSDK_PLATFORM_DEPS})
 
-gtest_discover_tests(test_lambda_add PROPERTIES DEPENDS deploy_test_lambda_add_fn)
+    gtest_discover_tests(test_lambda_add PROPERTIES DEPENDS deploy_test_lambda_add_fn)
+else ()
+    add_executable(test_lambda_add test_lambda_add.cpp)
+    target_link_libraries(test_lambda_add
+            GTest::gtest_main
+            awslabs_enhanced_cpp::headers
+            aws-cpp-sdk-lambda
+            tl::expected
+            alpaca
+            ${AWSSDK_LINK_LIBRARIES}
+            ${AWSSDK_PLATFORM_DEPS})
+
+    gtest_discover_tests(test_lambda_add)
+endif ()
 
 # add_executable(test_alpaca test_alpaca.cpp)
 # target_link_libraries(test_alpaca alpaca)
