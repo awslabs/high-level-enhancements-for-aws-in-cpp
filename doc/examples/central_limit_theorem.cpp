@@ -58,16 +58,16 @@ auto get_opts(int argc, char *argv[])
 {
     cxxopts::Options options("central limit theorem", "Leverage the cloud to test the central limit theorem for the (far from normal) exponential distribution");
     options.add_options()
-        ("l,lambda", "Lambda parameter for exponential distribution", 
+        ("l,lambda", "Lambda parameter for exponential distribution (default = 1)", 
          cxxopts::value<double>()->default_value("1"))
-        ("s,samples", "Number of samples in each experiment", 
-          cxxopts::value<unsigned>()->default_value("1"))
-        ("e,experiments", "Number of experiments to perform",
-         cxxopts::value<unsigned>()->default_value("1000"))
+        ("s,samples", "Number of samples in each experiment (default = 50000000)", 
+          cxxopts::value<unsigned>()->default_value("50000000"))
+        ("e,experiments", "Number of experiments to perform (default = 500)",
+         cxxopts::value<unsigned>()->default_value("500"))
         ("c,cloud", "Run in the cloud",
          cxxopts::value<bool>()->default_value("false"))
-        ("p,policy", "seq (default) - std::execution::seq, par - std::execution::par",
-         cxxopts::value<string>()->default_value("seq"));
+        ("p,policy", "seq, par (default), cloud",
+         cxxopts::value<string>()->default_value("par"));
     auto result = options.parse(argc, argv);
     return opts(result["lambda"].as<double>(),
                 result["samples"].as<unsigned>(),
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
         run_test(par, o, exp_mean);
     else if (o.policy == "par_unseq")
         run_test(par_unseq, o, exp_mean);
-    else if (o.policy == "cloud_launch")
+    else if (o.policy == "cloud_launch" || o.policy == "cloud")
         run_test(cloud_launch::cloud, o, cloud_exp_mean);
     else
         cerr << format("Invalid execution policy: {}", o.policy);
