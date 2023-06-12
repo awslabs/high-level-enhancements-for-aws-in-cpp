@@ -16,7 +16,7 @@ namespace lambda_declarations {
     int add(int, int);
 }
 
-auto add = BIND_AWS_LAMBDA(client, lambda_declarations::add, "Add");
+auto add = BIND_AWS_LAMBDA(client, lambda_declarations::add, "add");
 
 int main(int argc, char **argv)
 {

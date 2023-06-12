@@ -8,4 +8,4 @@ using namespace AwsLabs::Enhanced;
 
 int add(int i, int j) { return i + j; }
 
-Handler handle(&add);
+AwsLabs::Enhanced::Handler handle(&add);
