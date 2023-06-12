@@ -134,3 +134,9 @@ of the High-Level Enhancements for AWS in C++ installation directory.
     time ./central_limit_theorem --policy cloud
     ```
 
+**Notes**
+ * The non-cloud invocation may take a very long time to run. Feel free to kill it if you get the point.
+ * The `par` option may not actually run in parallel unless your
+ toolchain supports it. 
+     (e.g. by installing thread building blocks and adding it to `CMakeLists.txt`). This should not prevent you from running
+     the demo and seeing cloud concurrency in action when using the `cloud` option but is something to bear in mind.

@@ -123,5 +123,4 @@ target_link_libraries(central_limit_theorem
         fmt
         cxxopts
         Threads::Threads
-        tbb
         )

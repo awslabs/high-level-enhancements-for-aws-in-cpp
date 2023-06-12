@@ -11,6 +11,7 @@
 #include "awslabs/enhanced/Aws.h"
 #include <cxxopts.hpp>
 #include <vector>
+#include <cstdlib>
 #include <fmt/format.h>
 
 using std::map;
@@ -30,19 +31,7 @@ using namespace AwsLabs::Enhanced;
 
 
 AwsApi api;
-AwsLogging awsLogging(Aws::Utils::Logging::LogLevel::Trace, "enhanced_lambda_");
-#ifdef THREAD_POOL
-auto clientConfig = []() {
-    Aws::Client::ClientConfiguration config;
-    config.executor = Aws::MakeShared<Aws::Utils::Threading::PooledThreadExecutor>("clt", 100);
-    return config;
-}();
-
-EnhancedLambdaClient client(clientConfig);
-#else
 EnhancedLambdaClient client;
-#endif
-
 auto cloud_exp_mean = BIND_AWS_LAMBDA(client, exp_mean, "exp_mean");
 
 struct opts {
@@ -53,22 +42,52 @@ struct opts {
     string policy;
 };
 
+std::string description = R"(
+This program demonstrates running a statistical calculation either locally
+or in the cloud with minimal code changes. The cloud version should exhibit much
+better performance due to Lambda auto-scaling
+(https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html).
+
+For full instructions, including how to deploy the function to the cloud, see
+https://github.com/awslabs/high-level-enhancements-for-aws-in-cpp/tree/main/doc#central-limit-theorem-example
+)";
+
 // Get command line options
 auto get_opts(int argc, char *argv[])
 {
     cxxopts::Options options("central limit theorem", "Leverage the cloud to test the central limit theorem for the (far from normal) exponential distribution");
     options.add_options()
-        ("l,lambda", "Lambda parameter for exponential distribution (default = 1)", 
+        ("l,lambda", "Lambda parameter for exponential distribution", 
          cxxopts::value<double>()->default_value("1"))
-        ("s,samples", "Number of samples in each experiment (default = 50000000)", 
+        ("s,samples", "Number of samples in each experiment", 
           cxxopts::value<unsigned>()->default_value("50000000"))
-        ("e,experiments", "Number of experiments to perform (default = 500)",
+        ("e,experiments", "Number of experiments to perform",
          cxxopts::value<unsigned>()->default_value("500"))
         ("c,cloud", "Run in the cloud",
          cxxopts::value<bool>()->default_value("false"))
-        ("p,policy", "seq, par (default), cloud",
-         cxxopts::value<string>()->default_value("par"));
+        ("p,policy", "seq, par, cloud",
+         cxxopts::value<string>())
+        ("h,help", "Print usage");
     auto result = options.parse(argc, argv);
+    if(result.count("help")) {
+        std::cout << description;
+        std::cout << options.help() << std::endl;
+        std::cout << R"(
+Warnings: 
+ * The non-cloud options seq and par may take a very long time to run. Consider lowering the number of samples
+ * The par option will only provide parallel operation if your toolchain implements it 
+     (e.g. by installing thread building blocks and adding it to CMakeLists.txt). This should not prevent you from running
+     the demo and seeing cloud concurrency in action when using the "cloud" option but is something to bear in mind.
+)";
+    std::exit(0);
+    }
+    if(result.count("policy") == 0) {
+        std::cout << description << R"(
+For command-line options, see
+central_limit_theorem --help # Show all options
+)";
+    std::exit(0);
+    }
     return opts(result["lambda"].as<double>(),
                 result["samples"].as<unsigned>(),
                 result["experiments"].as<unsigned>(),
