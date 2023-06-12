@@ -1,12 +1,12 @@
 ## Introduction 
 
-This is a preview release of the High-level enhancements for AWS in C++, which consists of high-level library abstractions
-to simplify common AWS use cases in C++.  
+This is a preview release of the High-level enhancements for AWS in C++, which consists of high-level abstractions
+for AWS services in the style of the C++ standard library. Included examples show how to read and write S3
+objects using IOStreams, call AWS lambdas in the style of thread functions and demonstrate how STL algorithms
+(currently only `transform`) can take advantage of AWS Lambda concurrency to speed up an example program
+from 15 minutes to 9 seconds.
 
-This preview release includes 
-High-level abstractions for Amazon S3 and AWS Lambda, including
-support for using STL algorithms with full AWS Lambda concurrency
-(currently only `transform`). As an experimental preview release, expect that interfaces may change over time. Note that this
+As an experimental preview release, there are many gaps in coverage that we will fill over time and expect that interfaces will change. Note that this
 is provided on an AS-IS basis. See Section 7 of [LICENSE](LICENSE)
 for more information.
 
