@@ -47,7 +47,7 @@ The `doc/examples/s3stream` examples demonstrate how to use
 using familiar `fstream`-style syntax and IOStreams.  **Note:** Since S3 requires globally unique bucket names, you may need to change the bucket name
 in the code.
 
-### Example read_object
+#### Example read_object
 
 Example code `read_object.cpp` shows how to get the content of an object from s3 in a drop-in replacement to use
 ifstream read from local files.
@@ -60,7 +60,7 @@ The local file, the bucket and the object have to exist to succeed the run.
 ./read_object mytest
 ```
 
-### Example write_object
+#### Example write_object
 
 Example code `write_object.cpp` shows how to put content to an object in s3 in a drop-in replacement to use
 ofstream write to local files.
