@@ -10,7 +10,6 @@ string(CONCAT DESCRIPTION_STRING "The AWSLabs Enhanced libraries for C++ tight i
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 find_package(Git QUIET) # Adding development helper tools as git_hash built when available.
-find_package(tl-expected)
 include(project_version)
 obtain_project_version(AWSLABS_ENHANCED_CPP_PROJECT_VERSION awslabs-enhanced-cpp_GIT_HASH)
 

@@ -1,0 +1,16 @@
+{
+  "name" : "high-level-enhancements-for-aws-in-cpp",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "65e91ebd9e1d8a5c054b98b87abef68d5d36ce6f",
+  "dependencies" : [ {
+    "name" : "aws-sdk-cpp",
+    "version>=" : "1.11.65",
+    "features": ["s3","lambda"]
+  }, {
+    "name" : "gtest",
+    "version>=" : "1.13.0"
+  }, {
+    "name" : "tl-expected",
+    "version>=" : "1.1.0"
+  } ]
+}
