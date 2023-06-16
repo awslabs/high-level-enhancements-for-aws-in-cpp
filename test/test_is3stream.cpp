@@ -7,7 +7,6 @@
 
 #include "gtest/gtest.h"
 #include "test_helpers.h"
-
 namespace {
 class is3sIntegrationTest : public ::testing::Test {
 protected:
@@ -85,4 +84,19 @@ TEST_F(is3sIntegrationTest, CanReadFirstWordFromIs3s) {
   is3s >> result;
   ASSERT_FALSE(result.empty()) << "Second word is also extracted";
 }
+
+TEST_F(is3sIntegrationTest, DetectS3FailureInIs3sConstructor) {
+  // "foo" exists but we do not have permission to read
+  AwsLabs::Enhanced::is3stream is3s(infra.m_region, "foo", infra.m_object_name);
+  // Vary tests between checking for failure and exceptions for greater robustness
+  ASSERT_THROW(is3s.exceptions(std::ios_base::failbit | std::ios_base::badbit), std::ios_base::failure);
+}
+
+TEST_F(is3sIntegrationTest, DetectS3FailureInIs3sOpen) {
+  AwsLabs::Enhanced::is3stream is3s;
+  // "foo" exists but we do not have permission to read
+  is3s.open(infra.m_region, "foo", infra.m_object_name);
+  ASSERT_TRUE(is3s.fail() && !is3s.bad());
+}
+
 }
