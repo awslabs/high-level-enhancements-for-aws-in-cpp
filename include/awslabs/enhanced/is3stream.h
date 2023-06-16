@@ -5,6 +5,7 @@
 
 #include <awslabs/enhanced/s3buf.h>
 #include <string>
+#include <string_view>
 #include <istream>
 
 namespace AwsLabs::Enhanced {
@@ -13,6 +14,16 @@ class is3stream : public std::istream {
   std::string _region;
   std::string _bucket_name;
   std::string _object_name;
+protected:
+  /**
+   * Opens the current region/bucket/object and set the iostate
+  */
+  void open(std::ios_base::openmode mode = std::ios_base::in) {
+    if(_s3b->open(_region, _bucket_name, _object_name, mode))
+      std::ios::setstate(goodbit);
+    else
+      std::ios::setstate(failbit);
+  }
 public:
   /**
    * Default constructor for a is3stream not associated to an S3 object
@@ -41,7 +52,8 @@ public:
  * @return
  */
   is3stream &operator=(is3stream &&is3s) {
-    _s3b->close();
+    if(is_open())
+      _s3b->close();
     _region = is3s._region;
     _bucket_name = is3s._bucket_name;
     _object_name = is3s._object_name;
@@ -63,7 +75,7 @@ public:
     _region = region;
     _bucket_name = bucket_name;
     _object_name = object_name;
-    _s3b->open(_region, _bucket_name, _object_name, std::ios_base::in);
+    open();
   }
 
   /**
@@ -87,7 +99,7 @@ public:
    */
   void open(const std::string &object_name) {
     _object_name = object_name;
-    _s3b->open(_region, _bucket_name, _object_name, std::ios_base::in);
+    open();
   }
   /**
    * Opens object_name in previously set region and bucket to read content from it.
@@ -99,7 +111,7 @@ public:
     _region = region;
     _bucket_name = bucket_name;
     _object_name = object_name;
-    _s3b->open(_region, _bucket_name, _object_name, std::ios_base::in);
+    open();
   }
   /**
    * Returns whether the is3stream is currently associated to an S3 object.
@@ -137,7 +149,12 @@ public:
   }
 
   virtual ~is3stream() {
-    delete _s3b;
+    try {
+      delete _s3b;
+    } catch(...) {
+      // Don't throw from destructors
+      // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Re-never-fail
+    }
   }
 };
 
