@@ -5,8 +5,8 @@
 #include "awslabs/enhanced/Aws.h"
 #include "awslabs/enhanced/s3buf.h"
 
-#include "gtest/gtest.h"
 #include "test_helpers.h"
+#include "gtest/gtest.h"
 
 namespace {
 
@@ -25,158 +25,161 @@ TEST_F(s3bufIntegrationTest, EnforceTypes) {
 }
 
 TEST_F(s3bufIntegrationTest, ConstructAndCloseFails) {
-  //create default s3buf
+  // create default s3buf
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //close expected to fail
+  // close expected to fail
   ASSERT_FALSE(s3b.close()) << "Closing a s3buf that was not open should fail and return nullptr.";
 }
 
 TEST_F(s3bufIntegrationTest, OpenCloseFailsForNonInOutModes) {
-  //create default s3buf
+  // create default s3buf
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open fails with append mode
+  // open fails with append mode
   s3b.open("any_region", "any_bucket", "any_object", std::ios_base::app);
   ASSERT_FALSE(s3b.is_open()) << "Failed to open in s3b.";
 }
 
 TEST_F(s3bufIntegrationTest, ClosingTwiceAfterOpenFailsForInput) {
-  //create default s3buf
+  // create default s3buf
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open
+  // open
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in))
-              << "Failed to open in s3b.";
-  //s3b buff is open
+      << "Failed to open in s3b.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "s3buf should be marked open after opening it.";
-  //close
+  // close
   ASSERT_TRUE(s3b.close()) << "Failed to close an open s3buf";
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "s3buf shouldn't be marked open after closing it.";
-  //second close expected to fail
+  // second close expected to fail
   ASSERT_FALSE(s3b.close()) << "Closing a closed s3b should fail and return nullptr.";
 }
 
 TEST_F(s3bufIntegrationTest, DoubleOpenFailsForInput) {
-  //create default s3buf
+  // create default s3buf
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open
+  // open
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in))
-              << "Failed to open in s3b.";
-  //s3b buff is open
+      << "Failed to open in s3b.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "Failed to mark open s3buf as open.";
-  //open twice expected to fail
-  ASSERT_FALSE(s3b.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in))
-              << "Double open should fail and return nullptr";
+  // open twice expected to fail
+  ASSERT_FALSE(
+      s3b.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in))
+      << "Double open should fail and return nullptr";
 }
 
 TEST_F(s3bufIntegrationTest, OpenCloseOpenSucceedsForInput) {
-  //create s3buf with initialization
+  // create s3buf with initialization
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open
+  // open
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in))
-              << "Failed to open in s3b.";
-  //s3b buff is open
+      << "Failed to open in s3b.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "Failed to mark open s3buf as open.";
-  //close
+  // close
   ASSERT_TRUE(s3b.close()) << "Failed to close an open s3buf";
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Closed s3b shouldn't be marked open.";
-  //s3b buff can be opened again
+  // s3b buff can be opened again
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in))
-              << "Failed to open in s3b after closing it.";
-  //s3b buff is open
+      << "Failed to open in s3b after closing it.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "Failed to mark open s3buf as open.";
 }
 
 TEST_F(s3bufIntegrationTest, OpenDoubleCloseFailsForOutput) {
-  //create default s3buf
+  // create default s3buf
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open
+  // open
   std::string test_object_name = "open_double_close";
   infra.register_test_object(test_object_name);
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::out))
-              << "Failed to open in s3b.";
-  //s3b buff is open
+      << "Failed to open in s3b.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "s3buf should be marked open after opening it.";
-  //close
+  // close
   ASSERT_TRUE(s3b.close()) << "Failed to close an open s3buf";
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "s3buf shouldn't be marked open after closing it.";
-  //second close expected to fail
+  // second close expected to fail
   ASSERT_FALSE(s3b.close()) << "Closing a closed s3b should fail and return nullptr.";
 }
 
 TEST_F(s3bufIntegrationTest, DoubleOpenFailsForOutput) {
   std::string test_object_name = "open_double_open";
-  //create default s3buf
+  // create default s3buf
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open
+  // open
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::out))
-              << "Failed to open in s3b.";
-  //s3b buff is open
+      << "Failed to open in s3b.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "Failed to mark open s3buf as open.";
-  //open twice expected to fail
+  // open twice expected to fail
   ASSERT_FALSE(s3b.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::out))
-              << "Double open should fail and return nullptr";
-  //even mixed
-  //create default s3buf
+      << "Double open should fail and return nullptr";
+  // even mixed
+  // create default s3buf
   AwsLabs::Enhanced::s3buf s3b_IO;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b_IO.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open
-  ASSERT_TRUE(s3b_IO.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::out))
-              << "Failed to open in s3b.";
-  //s3b buff is open
+  // open
+  ASSERT_TRUE(
+      s3b_IO.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::out))
+      << "Failed to open in s3b.";
+  // s3b buff is open
   ASSERT_TRUE(s3b_IO.is_open()) << "Failed to mark open s3buf as open.";
-  //open twice expected to fail
-  ASSERT_FALSE(s3b_IO.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::in))
-              << "Double open should fail and return nullptr";
+  // open twice expected to fail
+  ASSERT_FALSE(
+      s3b_IO.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::in))
+      << "Double open should fail and return nullptr";
 }
 
 TEST_F(s3bufIntegrationTest, OpenCloseOpenSucceedsForOutput) {
   std::string test_object_name = "open_close_open-success";
-  //create s3buf with initialization
+  // create s3buf with initialization
   AwsLabs::Enhanced::s3buf s3b;
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Default construction of s3b shouldn't be marked open.";
-  //open
+  // open
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::out))
-              << "Failed to open in s3b.";
-  //s3b buff is open
+      << "Failed to open in s3b.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "Failed to mark open s3buf as open.";
-  //close
+  // close
   ASSERT_TRUE(s3b.close()) << "Failed to close an open s3buf";
-  //s3b buff is not open
+  // s3b buff is not open
   ASSERT_FALSE(s3b.is_open()) << "Closed s3b shouldn't be marked open.";
-  //s3b buff can be opened again
+  // s3b buff can be opened again
   ASSERT_TRUE(s3b.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::out))
-              << "Failed to open in s3b after closing it.";
-  //s3b buff is open
+      << "Failed to open in s3b after closing it.";
+  // s3b buff is open
   ASSERT_TRUE(s3b.is_open()) << "Failed to mark open s3buf as open.";
 }
 
 TEST_F(s3bufIntegrationTest, ExchangeOpenWithCloseS3Bufs) {
-  //create open s3buf
+  // create open s3buf
   AwsLabs::Enhanced::s3buf s3b_o;
   s3b_o.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in);
-  //s3b_o buff is open
+  // s3b_o buff is open
   ASSERT_TRUE(s3b_o.is_open()) << "Failed to mark open s3b_o as open.";
-  //create close s3buf
+  // create close s3buf
   AwsLabs::Enhanced::s3buf s3b_c;
-  //s3b_c buff is close
+  // s3b_c buff is close
   ASSERT_FALSE(s3b_c.is_open()) << "Failed to mark closed s3b_c as close.";
   // exchange content between the 2 s3bufs
   std::swap(s3b_o, s3b_c);
@@ -185,14 +188,14 @@ TEST_F(s3bufIntegrationTest, ExchangeOpenWithCloseS3Bufs) {
 }
 
 TEST_F(s3bufIntegrationTest, S3BufCanBeMoveAssigned) {
-  //create open s3buf
+  // create open s3buf
   AwsLabs::Enhanced::s3buf s3b_o;
   s3b_o.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in);
-  //s3b_o buff is open
+  // s3b_o buff is open
   ASSERT_TRUE(s3b_o.is_open()) << "Failed to mark open s3b_o as open.";
-  //create close s3buf
+  // create close s3buf
   AwsLabs::Enhanced::s3buf s3b_c;
-  //s3b_c buff is close
+  // s3b_c buff is close
   ASSERT_FALSE(s3b_c.is_open()) << "Failed to mark closed s3b_c as close.";
   // move content and set the one moved to uninitialized state
   s3b_c = std::move(s3b_o);
@@ -200,12 +203,12 @@ TEST_F(s3bufIntegrationTest, S3BufCanBeMoveAssigned) {
 }
 
 TEST_F(s3bufIntegrationTest, S3BufCanBeMoveConstructed) {
-  //create open s3buf
+  // create open s3buf
   AwsLabs::Enhanced::s3buf s3b_o;
   s3b_o.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in);
-  //s3b_o buff is open
+  // s3b_o buff is open
   ASSERT_TRUE(s3b_o.is_open()) << "Failed to mark open s3b_o as open.";
-  //create a new buffer moving the old one into it, old one has to be uninitialized now
+  // create a new buffer moving the old one into it, old one has to be uninitialized now
   AwsLabs::Enhanced::s3buf s3b_c(std::move(s3b_o));
   ASSERT_TRUE(s3b_c.is_open()) << "Failed to mark open s3b_c as open.";
 }
@@ -214,26 +217,26 @@ TEST_F(s3bufIntegrationTest, FourCharsReadFromS3BufSucceeds) {
   AwsLabs::Enhanced::s3buf s3b;
   s3b.open(infra.m_region, infra.m_bucket_name, infra.m_object_name, std::ios_base::in);
   ASSERT_TRUE(s3b.is_open()) << "Failed to mark open s3buf as open.";
-  //T
+  // T
   auto c = s3b.sgetc();
   ASSERT_TRUE((std::char_traits<char>::eof() != c)) << "First character is EOF";
-  ASSERT_TRUE(('T' == (char) c)) << "First character is not a 'T'";
-  //e
+  ASSERT_TRUE(('T' == (char)c)) << "First character is not a 'T'";
+  // e
   c = s3b.snextc();
   ASSERT_TRUE((std::char_traits<char>::eof() != c)) << "Second character is EOF";
-  ASSERT_TRUE(('e' == (char) c)) << "Second character is not a 'e'";
-  //getting e again on sbumpc
+  ASSERT_TRUE(('e' == (char)c)) << "Second character is not a 'e'";
+  // getting e again on sbumpc
   c = s3b.sbumpc();
   ASSERT_TRUE((std::char_traits<char>::eof() != c)) << "Second character is EOF";
-  ASSERT_TRUE(('e' == (char) c)) << "Second character is not a 'e'";
-  //s
+  ASSERT_TRUE(('e' == (char)c)) << "Second character is not a 'e'";
+  // s
   c = s3b.sgetc();
   ASSERT_TRUE((std::char_traits<char>::eof() != c)) << "Third character is EOF";
-  ASSERT_TRUE(('s' == (char) c)) << "Third character is not a 's'";
-  //t
+  ASSERT_TRUE(('s' == (char)c)) << "Third character is not a 's'";
+  // t
   c = s3b.snextc();
   ASSERT_TRUE((std::char_traits<char>::eof() != c)) << "Fourth character is EOF";
-  ASSERT_TRUE(('t' == (char) c)) << "Fourth character is not a 't'";
+  ASSERT_TRUE(('t' == (char)c)) << "Fourth character is not a 't'";
 }
 
 TEST_F(s3bufIntegrationTest, ReadingEnoughFromS3BufGetsToEOF) {
@@ -263,10 +266,10 @@ TEST_F(s3bufIntegrationTest, WritingAndReadingShortStringBackSucceeds) {
   std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
   AwsLabs::Enhanced::s3buf s3b_in;
   s3b_in.open(infra.m_region, infra.m_bucket_name, test_object_name, std::ios_base::in);
-  ASSERT_TRUE('T' == (char) s3b_in.sbumpc()) << "Failed to get the first character uploaded";
-  ASSERT_TRUE('e' == (char) s3b_in.sbumpc()) << "Failed to get the second character uploaded";
-  ASSERT_TRUE('s' == (char) s3b_in.sbumpc()) << "Failed to get the third character uploaded";
-  ASSERT_TRUE('t' == (char) s3b_in.sbumpc()) << "Failed to get the fourth character uploaded";
+  ASSERT_TRUE('T' == (char)s3b_in.sbumpc()) << "Failed to get the first character uploaded";
+  ASSERT_TRUE('e' == (char)s3b_in.sbumpc()) << "Failed to get the second character uploaded";
+  ASSERT_TRUE('s' == (char)s3b_in.sbumpc()) << "Failed to get the third character uploaded";
+  ASSERT_TRUE('t' == (char)s3b_in.sbumpc()) << "Failed to get the fourth character uploaded";
 }
 
 TEST_F(s3bufIntegrationTest, WritingAndReadingLongStringBackSucceeds) {
@@ -295,7 +298,6 @@ TEST_F(s3bufIntegrationTest, WritingAndReadingLongStringBackSucceeds) {
 
   // FIX: an extra character is introduced by calling to S3, a \0
   ASSERT_TRUE(test_object_content.size() + 1 == ss.str().size())
-              << "Failed to get the same amount of characters as put";
-
+      << "Failed to get the same amount of characters as put";
 }
-}
+} // namespace

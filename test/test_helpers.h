@@ -10,9 +10,9 @@
 #include <aws/core/utils/UUID.h>
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/CreateBucketRequest.h>
-#include <aws/s3/model/PutObjectRequest.h>
 #include <aws/s3/model/DeleteBucketRequest.h>
 #include <aws/s3/model/DeleteObjectRequest.h>
+#include <aws/s3/model/PutObjectRequest.h>
 
 class testInfra {
   Aws::S3::S3Client _client;
@@ -44,7 +44,8 @@ public:
       Aws::S3::Model::CreateBucketOutcome outcome = _client.CreateBucket(bucketRequest);
       if (!outcome.IsSuccess()) {
         auto err = outcome.GetError();
-        std::cout << "Error on CreateBucket: " << err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
+        std::cout << "Error on CreateBucket: " << err.GetExceptionName() << ": " << err.GetMessage()
+                  << std::endl;
         throw std::runtime_error(outcome.GetError().GetMessage().c_str());
       } else {
         std::cout << "Created bucket " << m_bucket_name << std::endl;
@@ -61,7 +62,8 @@ public:
 
       Aws::S3::Model::PutObjectOutcome outcome = _client.PutObject(objectRequest);
       if (outcome.IsSuccess()) {
-        std::cout << "Added object '" << m_object_name << "' to bucket '" << m_bucket_name << "'." << std::endl;
+        std::cout << "Added object '" << m_object_name << "' to bucket '" << m_bucket_name << "'."
+                  << std::endl;
       } else {
         std::cout << "Error on PutObject: " << outcome.GetError().GetMessage() << std::endl;
         throw std::runtime_error(outcome.GetError().GetMessage());
@@ -77,7 +79,7 @@ public:
     // Delete default test object
     deleteObject(m_object_name);
     // Delete registered test objects
-    for (const auto& s : m_objects_to_delete) {
+    for (const auto &s : m_objects_to_delete) {
       deleteObject(s);
     }
 
@@ -88,7 +90,6 @@ public:
       _client.DeleteBucket(bucketRequest);
     }
   }
-
 };
 
-#endif //S3STREAM_INCLUDE_TEST_HELPERS_H
+#endif // S3STREAM_INCLUDE_TEST_HELPERS_H

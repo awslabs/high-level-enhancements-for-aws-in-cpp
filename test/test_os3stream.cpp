@@ -5,8 +5,8 @@
 #include "awslabs/enhanced/Aws.h"
 #include "awslabs/enhanced/s3stream.h"
 
-#include "gtest/gtest.h"
 #include "test_helpers.h"
+#include "gtest/gtest.h"
 
 namespace {
 class os3sIntegrationTest : public ::testing::Test {
@@ -29,7 +29,6 @@ TEST_F(os3sIntegrationTest, DefaultConstructOs3sCanOpenAnObjectPassingIndividual
   os3s.close();
   ASSERT_FALSE(os3s.is_open()) << "os3s should not be open now.";
   ASSERT_FALSE(s3b->is_open()) << "s3b should not be open now.";
-
 }
 
 TEST_F(os3sIntegrationTest, OpenAnObjectPassingAllParamsToOpen) {
@@ -83,7 +82,7 @@ TEST_F(os3sIntegrationTest, ExchangeTwoOs3sSucceeds) {
 TEST_F(os3sIntegrationTest, WriteAndReadBackSucceeds) {
   std::string test_object_name = "write-read";
   infra.register_test_object(test_object_name);
-  //write an object
+  // write an object
   {
     AwsLabs::Enhanced::os3stream os3s(infra.m_region, infra.m_bucket_name, test_object_name);
     ASSERT_TRUE(os3s.is_open()) << "os3s should be open now";
@@ -92,7 +91,7 @@ TEST_F(os3sIntegrationTest, WriteAndReadBackSucceeds) {
     os3s.close();
   }
   std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
-  //read the object
+  // read the object
   {
     AwsLabs::Enhanced::is3stream is3s(infra.m_region, infra.m_bucket_name, test_object_name);
     ASSERT_TRUE(is3s.is_open()) << "is3s should be open now";
@@ -104,4 +103,4 @@ TEST_F(os3sIntegrationTest, WriteAndReadBackSucceeds) {
     is3s.close();
   }
 }
-}
+} // namespace

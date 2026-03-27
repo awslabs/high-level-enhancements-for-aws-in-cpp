@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <iostream>
-#include "awslabs/enhanced/lambda_client.h"
 #include "awslabs/enhanced/Aws.h"
+#include "awslabs/enhanced/lambda_client.h"
 #include "gtest/gtest.h"
 #include <future>
+#include <iostream>
 using namespace expns;
 namespace LambdaDecls {
-    int add(int, int);
+int add(int, int);
 }
 
 class lambdaIntegrationTest : public ::testing::Test {
@@ -20,8 +20,8 @@ protected:
 };
 
 TEST_F(lambdaIntegrationTest, TestCall) {
-    auto add = BIND_AWS_LAMBDA(client, LambdaDecls::add, "test_lambda_add_fn");
-    EXPECT_EQ(add(1, 3), 4);
+  auto add = BIND_AWS_LAMBDA(client, LambdaDecls::add, "test_lambda_add_fn");
+  EXPECT_EQ(add(1, 3), 4);
 }
 
 TEST_F(lambdaIntegrationTest, TestAsync) {
@@ -31,17 +31,20 @@ TEST_F(lambdaIntegrationTest, TestAsync) {
 }
 
 TEST_F(lambdaIntegrationTest, TestInvokeAsync) {
-    auto add = BIND_AWS_LAMBDA(client, LambdaDecls::add, "test_lambda_add_fn");
-    std::promise<expected<int, std::string>> p;
-    auto f = p.get_future();
-    add.invoke_async([&p](expected<int, std::string> e){ 
-      try {
-        p.set_value(e.value());
-      } catch (...) {
+  auto add = BIND_AWS_LAMBDA(client, LambdaDecls::add, "test_lambda_add_fn");
+  std::promise<expected<int, std::string>> p;
+  auto f = p.get_future();
+  add.invoke_async(
+      [&p](expected<int, std::string> e) {
         try {
-          p.set_exception(std::current_exception());
-        } catch(...) {}
-      }
-    }, 2, 3);
-    EXPECT_EQ(f.get(), 5);
+          p.set_value(e.value());
+        } catch (...) {
+          try {
+            p.set_exception(std::current_exception());
+          } catch (...) {
+          }
+        }
+      },
+      2, 3);
+  EXPECT_EQ(f.get(), 5);
 }

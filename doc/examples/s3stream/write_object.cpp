@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <aws/core/Aws.h>
 #include <awslabs/enhanced/s3stream.h>
 #include <fstream>
 #include <iostream>
-#include <aws/core/Aws.h>
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -26,9 +26,7 @@ int main(int argc, char *argv[]) {
   Aws::SDKOptions options;
   InitAPI(options);
   {
-    AwsLabs::Enhanced::os3stream os3s("us-east-1",
-                            "test-bucket-s3stream",
-                            argv[1]);
+    AwsLabs::Enhanced::os3stream os3s("us-east-1", "test-bucket-s3stream", argv[1]);
     os3s << test_content;
   }
   ShutdownAPI(options);

@@ -13,6 +13,38 @@ cmake --build .
 ctest .
 ```
 
+## Code style and static analysis
+
+### Formatting
+
+All C++ source files are formatted with **clang-format** using the LLVM base style (see
+`.clang-format` at the project root). Before committing, format any files you have touched:
+
+```shell
+# Format a specific file
+clang-format -i include/awslabs/enhanced/s3buf.h
+
+# Format all project headers and test sources
+find include test doc/examples -name "*.h" -o -name "*.cpp" | xargs clang-format -i
+```
+
+CI will reject PRs where source files are not properly formatted.
+
+### Static analysis
+
+The project uses **clang-tidy** for static analysis (see `.clang-tidy` at the project root).
+Enable it during CMake configuration with:
+
+```shell
+cmake -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON ..
+cmake --build .
+```
+
+`ENABLE_CLANG_TIDY` is **OFF** by default so that developer iterations stay fast. It is
+recommended to enable it before opening a Pull Request.
+
+Both tools require clang 18 or newer (matching the project's compiler baseline).
+
 ## Contributing
 
 The framework used to support testing is [GoogleTest 1.11+](https://github.com/google/googletest).

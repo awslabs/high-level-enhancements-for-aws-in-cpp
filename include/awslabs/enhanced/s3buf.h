@@ -7,9 +7,9 @@
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/GetObjectRequest.h>
 #include <aws/s3/model/PutObjectRequest.h>
+#include <memory>
 #include <streambuf>
 #include <variant>
-#include <memory>
 
 namespace AwsLabs::Enhanced {
 
@@ -25,13 +25,14 @@ class s3buf : public std::streambuf {
   using get_outcome_t = Aws::S3::Model::GetObjectOutcome;
   using internal_gbuf_t = std::variant<get_outcome_t>;
 
-  std::unique_ptr <internal_gbuf_t> internal_gbuf = nullptr;
-  std::shared_ptr <std::stringstream> internal_pbuf = nullptr;
+  std::unique_ptr<internal_gbuf_t> internal_gbuf = nullptr;
+  std::shared_ptr<std::stringstream> internal_pbuf = nullptr;
   char *get_buffer = nullptr;
   char *put_buffer = nullptr;
   const size_t buffer_size = 64;
-  std::unique_ptr <s3location> _object_loc = nullptr; //location  of the s3 object
-  std::unique_ptr <Aws::S3::S3Client> s3_client = nullptr;
+  std::unique_ptr<s3location> _object_loc = nullptr; // location  of the s3 object
+  std::unique_ptr<Aws::S3::S3Client> s3_client = nullptr;
+
 public:
   using char_type = std::streambuf::char_type;
   using traits_type = std::streambuf::traits_type;
@@ -43,7 +44,7 @@ public:
    * Constructs a s3buf without associating to any s3 object.
    */
   s3buf() {
-    //set the pointers for get
+    // set the pointers for get
     setg(nullptr, nullptr, nullptr);
   }
   /**
@@ -55,9 +56,10 @@ public:
    * @param s3b
    */
   s3buf(s3buf &&s3b) {
-    std::swap(internal_gbuf, s3b.internal_gbuf); //current internal_gbuf is nullptr thus no need to clean it
-    std::swap(get_buffer, s3b.get_buffer); //current get_buffer is nullptr thus no need to clean it
-    //get the pointers, they need no corrections because get_buffer is outside the object
+    std::swap(internal_gbuf,
+              s3b.internal_gbuf); // current internal_gbuf is nullptr thus no need to clean it
+    std::swap(get_buffer, s3b.get_buffer); // current get_buffer is nullptr thus no need to clean it
+    // get the pointers, they need no corrections because get_buffer is outside the object
     setg(s3b.eback(), s3b.gptr(), s3b.egptr());
     s3b.setg(nullptr, nullptr, nullptr);
   }
@@ -93,7 +95,8 @@ public:
    * @param object_name
    * @return
    */
-  s3buf *open(const char *region, const char *bucket_name, const char *object_name, std::ios_base::openmode mode) {
+  s3buf *open(const char *region, const char *bucket_name, const char *object_name,
+              std::ios_base::openmode mode) {
     _object_loc = std::make_unique<s3location>(region, bucket_name, object_name);
     if (is_open()) {
       return nullptr; // Already opened
@@ -108,7 +111,7 @@ public:
       setp(put_buffer, put_buffer + buffer_size);
       return this;
     } else if (std::ios_base::in == mode) {
-      //TODO download file in parts
+      // TODO download file in parts
       Aws::S3::Model::GetObjectRequest get_request;
       get_request.SetBucket(_object_loc->bucket);
       get_request.SetKey(_object_loc->object);
@@ -133,10 +136,8 @@ public:
    * @param mode
    * @return
    */
-  s3buf *open(const std::string &region,
-              const std::string &bucket_name,
-              const std::string &object_name,
-              std::ios_base::openmode mode) {
+  s3buf *open(const std::string &region, const std::string &bucket_name,
+              const std::string &object_name, std::ios_base::openmode mode) {
     return open(region.c_str(), bucket_name.c_str(), object_name.c_str(), mode);
   }
 
@@ -144,9 +145,7 @@ public:
    * Returns whether the s3buf is associated to an object or not.
    * @return
    */
-  bool is_open() const {
-    return get_buffer || put_buffer;
-  }
+  bool is_open() const { return get_buffer || put_buffer; }
   /**
    * Closes an object association. Any pending output is written and transactions are completed.
    * The function fails if any suboperation fails or there is no open association to an S3 object.
@@ -160,7 +159,7 @@ public:
       setg(nullptr, nullptr, nullptr);
       return this;
     } else if (put_buffer) {
-      //if empty object with only key, overflow was never called
+      // if empty object with only key, overflow was never called
       if (!internal_pbuf) {
         internal_pbuf = std::make_shared<std::stringstream>();
       }
@@ -170,7 +169,7 @@ public:
       delete[] put_buffer;
       put_buffer = nullptr;
       setp(nullptr, nullptr);
-      //TODO upload file in parts
+      // TODO upload file in parts
       Aws::S3::Model::PutObjectRequest put_request;
       put_request.SetBucket(_object_loc->bucket);
       put_request.SetKey(_object_loc->object);
@@ -187,9 +186,9 @@ public:
     }
   }
   /**
- * Exchange the contents between s3b and *this.
- * @param s3b
- */
+   * Exchange the contents between s3b and *this.
+   * @param s3b
+   */
   void swap(s3buf &s3b) {
     std::swap(internal_gbuf, s3b.internal_gbuf);
     std::swap(get_buffer, s3b.get_buffer);
@@ -201,10 +200,12 @@ public:
     s3b.setg(eback(), gptr(), egptr());
     setg(b, n, e);
   }
+
 protected:
   /**
    * if nothing left to read returns eof
-   * if stuff available in internal_gbuf, it is moved to the get_buffer and the first character returned
+   * if stuff available in internal_gbuf, it is moved to the get_buffer and the first character
+   * returned
    * @return
    */
   virtual int_type underflow() override {
@@ -241,11 +242,9 @@ protected:
     return c;
   }
 };
-}
+} // namespace AwsLabs::Enhanced
 
 namespace std {
-void swap(AwsLabs::Enhanced::s3buf &lhs, AwsLabs::Enhanced::s3buf &rhs) {
-  lhs.swap(rhs);
-}
-}
-#endif //S3STREAM_INCLUDE_S3BUF_H
+void swap(AwsLabs::Enhanced::s3buf &lhs, AwsLabs::Enhanced::s3buf &rhs) { lhs.swap(rhs); }
+} // namespace std
+#endif // S3STREAM_INCLUDE_S3BUF_H

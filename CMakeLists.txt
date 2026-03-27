@@ -56,6 +56,15 @@ endif ()
 
 # Options definition
 option(BUILD_TESTING "If enabled, the SDK will include tests in the build" OFF)
+option(ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy during compilation" OFF)
+
+# -- Static analysis --
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy REQUIRED
+        DOC "Path to clang-tidy executable")
+    message(STATUS "clang-tidy enabled: ${CLANG_TIDY_EXE}")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+endif()
 
 # -- Dependencies --
 include(dependencies)

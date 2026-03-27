@@ -4,11 +4,11 @@
  */
 
 #pragma once
-#include <memory>
 #include <aws/core/Aws.h>
 #include <aws/core/utils/logging/AWSLogging.h>
-#include <aws/core/utils/logging/LogSystemInterface.h>
 #include <aws/core/utils/logging/DefaultLogSystem.h>
+#include <aws/core/utils/logging/LogSystemInterface.h>
+#include <memory>
 
 namespace AwsLabs::Enhanced {
 struct AwsApi {
@@ -20,33 +20,29 @@ struct AwsApi {
     Aws::InitAPI(options);
     apiInitialized = true;
   }
-  ~AwsApi() {
-    Aws::ShutdownAPI(options);
-  }
+  ~AwsApi() { Aws::ShutdownAPI(options); }
   Aws::SDKOptions options;
 };
 
 struct AwsLogging {
-  AwsLogging(const std::shared_ptr <Aws::Utils::Logging::LogSystemInterface> &logSystem) {
+  AwsLogging(const std::shared_ptr<Aws::Utils::Logging::LogSystemInterface> &logSystem) {
     Aws::Utils::Logging::InitializeAWSLogging(logSystem);
   }
 
-  AwsLogging(Aws::Utils::Logging::LogLevel logLevel,
-             const std::shared_ptr <Aws::OStream> logFile,
+  AwsLogging(Aws::Utils::Logging::LogLevel logLevel, const std::shared_ptr<Aws::OStream> logFile,
              char const *allocationTag = "") {
-    auto logSystem = Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(allocationTag, logLevel, logFile);
+    auto logSystem =
+        Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(allocationTag, logLevel, logFile);
     Aws::Utils::Logging::InitializeAWSLogging(logSystem);
   }
 
-  AwsLogging(Aws::Utils::Logging::LogLevel logLevel,
-             const Aws::String &filenamePrefix,
+  AwsLogging(Aws::Utils::Logging::LogLevel logLevel, const Aws::String &filenamePrefix,
              char const *allocationTag = "") {
-    auto logSystem = Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(allocationTag, logLevel, filenamePrefix);
+    auto logSystem = Aws::MakeShared<Aws::Utils::Logging::DefaultLogSystem>(allocationTag, logLevel,
+                                                                            filenamePrefix);
     Aws::Utils::Logging::InitializeAWSLogging(logSystem);
   }
 
-  ~AwsLogging() {
-    Aws::Utils::Logging::ShutdownAWSLogging();
-  }
+  ~AwsLogging() { Aws::Utils::Logging::ShutdownAWSLogging(); }
 };
-}
+} // namespace AwsLabs::Enhanced
