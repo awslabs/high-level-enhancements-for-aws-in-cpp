@@ -296,8 +296,7 @@ TEST_F(s3bufIntegrationTest, WritingAndReadingLongStringBackSucceeds) {
     ss.put(ch);
   } while (s3b_in.snextc() != EOF);
 
-  // FIX: an extra character is introduced by calling to S3, a \0
-  ASSERT_TRUE(test_object_content.size() + 1 == ss.str().size())
-      << "Failed to get the same amount of characters as put";
+  ASSERT_EQ(test_object_content.size(), ss.str().size())
+      << "Failed to get the same number of characters as were put";
 }
 } // namespace

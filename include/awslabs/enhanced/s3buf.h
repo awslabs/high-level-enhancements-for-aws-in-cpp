@@ -203,20 +203,22 @@ public:
 
 protected:
   /**
-   * if nothing left to read returns eof
-   * if stuff available in internal_gbuf, it is moved to the get_buffer and the first character
-   * returned
-   * @return
+   * Refills get_buffer from the S3 response body stream.
+   * Returns the first buffered character, or EOF when the object is exhausted.
+   *
+   * The previous implementation checked eof() *before* reading, which caused
+   * AWS's IOStream to read one extra byte (a '\0') after the last real byte
+   * before setting eofbit.  The fix is to inspect the result of read() itself:
+   * read() returns a falsy stream reference when no bytes could be transferred,
+   * which is the authoritative signal that we have reached the end.
    */
-  virtual int_type underflow() override {
+  int_type underflow() override {
     if (internal_gbuf) {
       auto outcome = std::get_if<get_outcome_t>(&*internal_gbuf);
       if (outcome) {
         int pos = 0;
-        while (pos < buffer_size) {
-          if (!outcome->GetResult().GetBody().eof()) {
-            outcome->GetResult().GetBody().read(get_buffer + pos, 1);
-          } else {
+        while (pos < static_cast<int>(buffer_size)) {
+          if (!outcome->GetResult().GetBody().read(get_buffer + pos, 1)) {
             break;
           }
           ++pos;
@@ -230,7 +232,7 @@ protected:
       return traits_type::eof();
     }
   }
-  virtual int_type overflow(int_type c) override {
+  int_type overflow(int_type c) override {
     if (!internal_pbuf) {
       internal_pbuf = std::make_shared<std::stringstream>();
     }
