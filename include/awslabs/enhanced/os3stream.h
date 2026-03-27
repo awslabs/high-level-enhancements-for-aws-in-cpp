@@ -52,16 +52,12 @@ public:
     return *this;
   }
   /**
-   * Construct an os3stream that objects will be open in bucket_name bucket.
-   * @param bucket_name
-   */
-  os3stream(const std::string &bucket_name) {}
-  /**
    * Construct an os3stream and opens the target object for writing.
+   * @param region
    * @param bucket_name
    * @param object_name
    */
-  os3stream(const std::string region, const std::string &bucket_name,
+  os3stream(const std::string &region, const std::string &bucket_name,
             const std::string &object_name)
       : std::ostream(new AwsLabs::Enhanced::s3buf()) {
     _s3b = dynamic_cast<AwsLabs::Enhanced::s3buf *>(std::ostream::rdbuf());
