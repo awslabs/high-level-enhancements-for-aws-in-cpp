@@ -9,7 +9,6 @@
 #include <aws/s3/model/PutObjectRequest.h>
 #include <memory>
 #include <streambuf>
-#include <variant>
 
 namespace AwsLabs::Enhanced {
 
@@ -23,9 +22,12 @@ struct s3location {
 
 class s3buf : public std::streambuf {
   using get_outcome_t = Aws::S3::Model::GetObjectOutcome;
-  using internal_gbuf_t = std::variant<get_outcome_t>;
 
-  std::unique_ptr<internal_gbuf_t> internal_gbuf = nullptr;
+  // Holds the live GetObject outcome (and its streaming response body) while
+  // the buffer is open for reading.  A single-type std::variant was used here
+  // previously — replaced by a direct unique_ptr to remove unnecessary
+  // indirection and the dependency on <variant>.
+  std::unique_ptr<get_outcome_t> internal_gbuf = nullptr;
   std::shared_ptr<std::stringstream> internal_pbuf = nullptr;
   char *get_buffer = nullptr;
   char *put_buffer = nullptr;
@@ -116,8 +118,8 @@ public:
       get_request.SetBucket(_object_loc->bucket);
       get_request.SetKey(_object_loc->object);
 
-      internal_gbuf = std::make_unique<internal_gbuf_t>(s3_client->GetObject(get_request));
-      if (get_if<get_outcome_t>(&*internal_gbuf)->IsSuccess()) {
+      internal_gbuf = std::make_unique<get_outcome_t>(s3_client->GetObject(get_request));
+      if (internal_gbuf->IsSuccess()) {
         get_buffer = new char[buffer_size]();
         return this;
       } else {
@@ -214,17 +216,14 @@ protected:
    */
   int_type underflow() override {
     if (internal_gbuf) {
-      auto outcome = std::get_if<get_outcome_t>(&*internal_gbuf);
-      if (outcome) {
-        int pos = 0;
-        while (pos < static_cast<int>(buffer_size)) {
-          if (!outcome->GetResult().GetBody().read(get_buffer + pos, 1)) {
-            break;
-          }
-          ++pos;
+      int pos = 0;
+      while (pos < static_cast<int>(buffer_size)) {
+        if (!internal_gbuf->GetResult().GetBody().read(get_buffer + pos, 1)) {
+          break;
         }
-        setg(get_buffer, get_buffer, get_buffer + pos);
+        ++pos;
       }
+      setg(get_buffer, get_buffer, get_buffer + pos);
     }
     if (egptr() > gptr() && !(eback() > gptr())) {
       return *gptr();

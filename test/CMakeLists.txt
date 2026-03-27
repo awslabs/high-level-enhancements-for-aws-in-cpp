@@ -83,10 +83,12 @@ if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             GTest::gtest_main
             awslabs_enhanced_cpp::headers
             aws-cpp-sdk-lambda
-            tl::expected
             alpaca
             ${AWSSDK_LINK_LIBRARIES}
             ${AWSSDK_PLATFORM_DEPS})
+    if(tl-expected_FOUND)
+        target_link_libraries(test_lambda_add tl::expected)
+    endif()
 
     gtest_discover_tests(test_lambda_add PROPERTIES DEPENDS deploy_test_lambda_add_fn)
 else ()
@@ -95,10 +97,12 @@ else ()
             GTest::gtest_main
             awslabs_enhanced_cpp::headers
             aws-cpp-sdk-lambda
-            tl::expected
             alpaca
             ${AWSSDK_LINK_LIBRARIES}
             ${AWSSDK_PLATFORM_DEPS})
+    if(tl-expected_FOUND)
+        target_link_libraries(test_lambda_add tl::expected)
+    endif()
 
     gtest_discover_tests(test_lambda_add)
 endif ()

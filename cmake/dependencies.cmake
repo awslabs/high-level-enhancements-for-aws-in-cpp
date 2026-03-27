@@ -3,7 +3,9 @@
 
 find_package(AWSSDK REQUIRED COMPONENTS s3 lambda)
 find_package(aws-lambda-runtime)
-find_package(tl-expected)
+# tl-expected is optional: with C++23 the library uses std::expected directly.
+# Keep the find_package so existing installations continue to work.
+find_package(tl-expected QUIET)
 
 if (BUILD_TESTING)
     message(STATUS "Building tests")

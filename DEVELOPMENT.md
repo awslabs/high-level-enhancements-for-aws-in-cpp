@@ -45,6 +45,17 @@ recommended to enable it before opening a Pull Request.
 
 Both tools require clang 18 or newer (matching the project's compiler baseline).
 
+## C++ standard
+
+The project targets **C++23**.  Key implications:
+
+- `std::expected` (from `<expected>`) is used directly; the `tl::expected` package
+  is no longer required.  It is kept as an optional fallback for older toolchains
+  via `#ifdef __cpp_lib_expected` guards already present in the headers.
+- Compiler: GCC 13+, Clang 16+, or MSVC 19.38+ are needed for full C++23 support.
+- CMake feature requirement: `cxx_std_23` — older compilers will be rejected at
+  configure time.
+
 ## Contributing
 
 The framework used to support testing is [GoogleTest 1.11+](https://github.com/google/googletest).
