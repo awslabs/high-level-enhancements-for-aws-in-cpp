@@ -97,10 +97,10 @@ public:
    */
   s3buf *open(const char *region, const char *bucket_name, const char *object_name,
               std::ios_base::openmode mode) {
-    _object_loc = std::make_unique<s3location>(region, bucket_name, object_name);
     if (is_open()) {
-      return nullptr; // Already opened
+      return nullptr; // Already opened — do NOT clobber the current location.
     }
+    _object_loc = std::make_unique<s3location>(region, bucket_name, object_name);
     if (!s3_client) {
       Aws::Client::ClientConfiguration config;
       config.region = _object_loc->region;
