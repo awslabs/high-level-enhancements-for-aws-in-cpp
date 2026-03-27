@@ -79,6 +79,17 @@ TEST_F(os3sIntegrationTest, ExchangeTwoOs3sSucceeds) {
   ASSERT_TRUE(os3s_2.is_open()) << "os3s_2 should be open now";
 }
 
+TEST_F(os3sIntegrationTest, AnOs3sCanBeMoveConstructed) {
+  std::string test_object_name = "move_construct";
+  infra.register_test_object(test_object_name);
+
+  AwsLabs::Enhanced::os3stream os3s_1(infra.m_region, infra.m_bucket_name, test_object_name);
+  ASSERT_TRUE(os3s_1.is_open()) << "os3s_1 should be open now";
+  AwsLabs::Enhanced::os3stream os3s_2(std::move(os3s_1));
+  ASSERT_TRUE(os3s_2.is_open()) << "os3s_2 should be open after move construction";
+  ASSERT_FALSE(os3s_1.is_open()) << "os3s_1 should be closed after being moved from";
+}
+
 TEST_F(os3sIntegrationTest, WriteAndReadBackSucceeds) {
   std::string test_object_name = "write-read";
   infra.register_test_object(test_object_name);

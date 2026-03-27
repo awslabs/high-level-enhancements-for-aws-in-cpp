@@ -39,10 +39,20 @@ public:
    */
   is3stream(const is3stream &) = delete;
   /**
-   * Move constructor deleted
-   * @param is3s
+   * Move constructor acquires is3s contents.
+   *
+   * Allocates a fresh s3buf for *this, then swaps its contents with is3s's
+   * buffer.  The base-class rdbuf pointers stay fixed (each stream keeps its
+   * own buffer object); only the data inside those buffers is exchanged.
+   * @param is3s  the stream to move from; left in a valid, closed state.
    */
-  is3stream(is3stream &&is3s) = delete;
+  is3stream(is3stream &&is3s) : std::istream(new s3buf()) {
+    _s3b = dynamic_cast<s3buf *>(std::istream::rdbuf());
+    _region = std::move(is3s._region);
+    _bucket_name = std::move(is3s._bucket_name);
+    _object_name = std::move(is3s._object_name);
+    std::swap(*_s3b, *(is3s._s3b));
+  }
   /**
    * Copy assignment is deleted.
    * @return
@@ -134,11 +144,15 @@ public:
    */
   s3buf *rdbuf() const { return _s3b; }
   /**
-   * Exchange all internals between *this and is3s
+   * Exchange all internals between *this and is3s.
+   *
+   * Swaps the *contents* of each stream's s3buf (not the pointers), so the
+   * base-class rdbuf pointer in each stream continues to point at its own
+   * buffer object — reading from either stream after the swap works correctly.
    * @param is3s
    */
   void swap(is3stream &is3s) {
-    std::swap(_s3b, is3s._s3b);
+    std::swap(*_s3b, *(is3s._s3b));
     std::swap(_region, is3s._region);
     std::swap(_bucket_name, is3s._bucket_name);
     std::swap(_object_name, is3s._object_name);

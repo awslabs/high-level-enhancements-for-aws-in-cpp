@@ -26,10 +26,20 @@ public:
    */
   os3stream(const os3stream &) = delete;
   /**
-   * Move constructor deleted
-   * @param os3s
+   * Move constructor acquires os3s contents.
+   *
+   * Allocates a fresh s3buf for *this, then swaps its contents with os3s's
+   * buffer.  The base-class rdbuf pointers stay fixed; only the data inside
+   * the buffers is exchanged.
+   * @param os3s  the stream to move from; left in a valid, closed state.
    */
-  os3stream(os3stream &&os3s) = delete;
+  os3stream(os3stream &&os3s) : std::ostream(new s3buf()) {
+    _s3b = dynamic_cast<s3buf *>(std::ostream::rdbuf());
+    _region = std::move(os3s._region);
+    _bucket_name = std::move(os3s._bucket_name);
+    _object_name = std::move(os3s._object_name);
+    std::swap(*_s3b, *(os3s._s3b));
+  }
   /**
    * Copy assignment is deleted.
    * @return
@@ -119,11 +129,15 @@ public:
    */
   s3buf *rdbuf() const { return _s3b; }
   /**
-   * Exchange all internals between *this and os3s
+   * Exchange all internals between *this and os3s.
+   *
+   * Swaps the *contents* of each stream's s3buf (not the pointers), so the
+   * base-class rdbuf pointer in each stream continues to point at its own
+   * buffer object — writing to either stream after the swap works correctly.
    * @param os3s
    */
   void swap(os3stream &os3s) {
-    std::swap(_s3b, os3s._s3b);
+    std::swap(*_s3b, *(os3s._s3b));
     std::swap(_region, os3s._region);
     std::swap(_bucket_name, os3s._bucket_name);
     std::swap(_object_name, os3s._object_name);
