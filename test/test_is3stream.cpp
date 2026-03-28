@@ -5,8 +5,8 @@
 #include "awslabs/enhanced/Aws.h"
 #include "awslabs/enhanced/s3stream.h"
 
-#include "gtest/gtest.h"
 #include "test_helpers.h"
+#include "gtest/gtest.h"
 namespace {
 class is3sIntegrationTest : public ::testing::Test {
 protected:
@@ -67,12 +67,21 @@ TEST_F(is3sIntegrationTest, TwoIs3sCanBeExchanged) {
   ASSERT_TRUE(is3s_2.is_open()) << "is3s_2 should be open now";
 }
 
-TEST_F(is3sIntegrationTest, AnIs3sCanBeMoved) {
+TEST_F(is3sIntegrationTest, AnIs3sCanBeMoveAssigned) {
   AwsLabs::Enhanced::is3stream is3s_1(infra.m_region, infra.m_bucket_name, infra.m_object_name);
   ASSERT_TRUE(is3s_1.is_open()) << "is3s_1 should be open now";
   AwsLabs::Enhanced::is3stream is3s_2;
   is3s_2 = std::move(is3s_1);
   ASSERT_TRUE(is3s_2.is_open()) << "is3s_2 should be open now";
+  ASSERT_FALSE(is3s_1.is_open()) << "is3s_1 should be closed after move";
+}
+
+TEST_F(is3sIntegrationTest, AnIs3sCanBeMoveConstructed) {
+  AwsLabs::Enhanced::is3stream is3s_1(infra.m_region, infra.m_bucket_name, infra.m_object_name);
+  ASSERT_TRUE(is3s_1.is_open()) << "is3s_1 should be open now";
+  AwsLabs::Enhanced::is3stream is3s_2(std::move(is3s_1));
+  ASSERT_TRUE(is3s_2.is_open()) << "is3s_2 should be open after move construction";
+  ASSERT_FALSE(is3s_1.is_open()) << "is3s_1 should be closed after being moved from";
 }
 
 TEST_F(is3sIntegrationTest, CanReadFirstWordFromIs3s) {
@@ -89,7 +98,8 @@ TEST_F(is3sIntegrationTest, DetectS3FailureInIs3sConstructor) {
   // "foo" exists but we do not have permission to read
   AwsLabs::Enhanced::is3stream is3s(infra.m_region, "foo", infra.m_object_name);
   // Vary tests between checking for failure and exceptions for greater robustness
-  ASSERT_THROW(is3s.exceptions(std::ios_base::failbit | std::ios_base::badbit), std::ios_base::failure);
+  ASSERT_THROW(is3s.exceptions(std::ios_base::failbit | std::ios_base::badbit),
+               std::ios_base::failure);
 }
 
 TEST_F(is3sIntegrationTest, DetectS3FailureInIs3sOpen) {
@@ -99,4 +109,4 @@ TEST_F(is3sIntegrationTest, DetectS3FailureInIs3sOpen) {
   ASSERT_TRUE(is3s.fail() && !is3s.bad());
 }
 
-}
+} // namespace

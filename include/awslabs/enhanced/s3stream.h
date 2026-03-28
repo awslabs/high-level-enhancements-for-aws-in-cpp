@@ -4,4 +4,3 @@
 
 #include <awslabs/enhanced/is3stream.h>
 #include <awslabs/enhanced/os3stream.h>
-

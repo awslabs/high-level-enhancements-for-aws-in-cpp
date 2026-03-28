@@ -1,0 +1,32 @@
+---
+Checks: >
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  bugprone-*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-use-nodiscard,
+  modernize-loop-convert,
+  modernize-use-default-member-init,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  performance-move-const-arg,
+  readability-braces-around-statements,
+  readability-const-return-type,
+  readability-else-after-return,
+  readability-make-member-function-const,
+  readability-simplify-boolean-expr,
+  readability-redundant-member-init,
+  -bugprone-easily-swappable-parameters
+
+# Treat clang-tidy warnings as errors during CI.
+# Set to "" locally during active development to see warnings without failing.
+WarningsAsErrors: ""
+
+# Only analyse project headers, not third-party SDK headers.
+HeaderFilterRegex: "include/awslabs/.*"
+
+# Apply the project's .clang-format rules when suggesting fixes.
+FormatStyle: "file"

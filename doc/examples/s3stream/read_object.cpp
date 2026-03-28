@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <aws/core/Aws.h>
 #include <awslabs/enhanced/s3stream.h>
 #include <fstream>
 #include <iostream>
-#include <aws/core/Aws.h>
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -18,8 +18,7 @@ int main(int argc, char *argv[]) {
   {
     std::ifstream ifs(argv[1]);
     ifs >> std::noskipws;
-    std::copy(std::istream_iterator<char>(ifs),
-              std::istream_iterator<char>(),
+    std::copy(std::istream_iterator<char>(ifs), std::istream_iterator<char>(),
               std::ostream_iterator<char>(std::cout));
     ifs.close();
   }
@@ -29,12 +28,9 @@ int main(int argc, char *argv[]) {
   Aws::SDKOptions options;
   InitAPI(options);
   {
-    AwsLabs::Enhanced::is3stream is3s("us-east-1",
-                               "test-bucket-s3stream",
-                               argv[1]);
+    AwsLabs::Enhanced::is3stream is3s("us-east-1", "test-bucket-s3stream", argv[1]);
     is3s >> std::noskipws;
-    std::copy(std::istream_iterator<char>(is3s),
-              std::istream_iterator<char>(),
+    std::copy(std::istream_iterator<char>(is3s), std::istream_iterator<char>(),
               std::ostream_iterator<char>(std::cout));
     is3s.close();
   }

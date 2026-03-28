@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 struct exp_parameters {
-    double lambda;
-    unsigned samples;
+  double lambda;
+  unsigned samples;
 };
 
 double exp_mean(exp_parameters);

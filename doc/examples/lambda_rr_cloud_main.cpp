@@ -8,15 +8,14 @@
 using namespace aws::lambda_runtime;
 
 // Example from https://github.com/awslabs/aws-lambda-cpp/README.md still works
-invocation_response my_handler(invocation_request const& req)
-{
-    if (req.payload.length() > 42) {
-        return invocation_response::failure("error message here"/*error_message*/,
-                                            "error type here" /*error_type*/);
-    }
+invocation_response my_handler(invocation_request const &req) {
+  if (req.payload.length() > 42) {
+    return invocation_response::failure("error message here" /*error_message*/,
+                                        "error type here" /*error_type*/);
+  }
 
-    return invocation_response::success("json payload here" /*payload*/,
-                                        "application/json" /*MIME type*/);
+  return invocation_response::success("json payload here" /*payload*/,
+                                      "application/json" /*MIME type*/);
 }
 
 Handler handle(&my_handler);
