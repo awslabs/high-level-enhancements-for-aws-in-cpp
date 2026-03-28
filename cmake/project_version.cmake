@@ -24,6 +24,7 @@ function(obtain_project_version resultVarVersion resultVarGitHash)
 
     if (NOT VERSION_STRING) # Non DEV build relays on VERSION file updated by release CI
         file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" VERSION_STRING)
+        string(STRIP "${VERSION_STRING}" VERSION_STRING)
     endif ()
 
     set(${resultVarVersion} ${VERSION_STRING} PARENT_SCOPE)

@@ -12,7 +12,7 @@ project("awslabs_enhanced_cpp_examples"
 
 # -- Project wide setup --
 # Setting C++ minimum requirements
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

@@ -1,7 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 
 # -- Preamble --
 string(CONCAT DESCRIPTION_STRING "The AWSLabs Enhanced libraries for C++ tight integration of "
@@ -10,7 +10,6 @@ string(CONCAT DESCRIPTION_STRING "The AWSLabs Enhanced libraries for C++ tight i
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 find_package(Git QUIET) # Adding development helper tools as git_hash built when available.
-find_package(tl-expected)
 include(project_version)
 obtain_project_version(AWSLABS_ENHANCED_CPP_PROJECT_VERSION awslabs-enhanced-cpp_GIT_HASH)
 
@@ -56,7 +55,8 @@ endif ()
 
 # Options definition
 option(BUILD_TESTING "If enabled, the SDK will include tests in the build" OFF)
-option(ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy during compilation" OFF)
+option(ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy during compilation" ON)
+option(ENABLE_CLANG_FORMAT "Enable source formatting check with clang-format" ON)
 
 # -- Static analysis --
 if(ENABLE_CLANG_TIDY)
@@ -64,6 +64,23 @@ if(ENABLE_CLANG_TIDY)
         DOC "Path to clang-tidy executable")
     message(STATUS "clang-tidy enabled: ${CLANG_TIDY_EXE}")
     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+endif()
+
+# -- Format check --
+if(ENABLE_CLANG_FORMAT)
+    find_program(CLANG_FORMAT_EXE NAMES clang-format REQUIRED
+        DOC "Path to clang-format executable")
+    message(STATUS "clang-format enabled: ${CLANG_FORMAT_EXE}")
+    file(GLOB_RECURSE ALL_FORMAT_SOURCE_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/awslabs/*.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/test/*.h"
+    )
+    add_custom_target(clang-format-check ALL
+        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${ALL_FORMAT_SOURCE_FILES}
+        COMMENT "Checking source formatting with clang-format"
+        VERBATIM
+    )
 endif()
 
 # -- Dependencies --

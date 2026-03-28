@@ -33,15 +33,13 @@ CI will reject PRs where source files are not properly formatted.
 ### Static analysis
 
 The project uses **clang-tidy** for static analysis (see `.clang-tidy` at the project root).
-Enable it during CMake configuration with:
+Both `ENABLE_CLANG_TIDY` and `ENABLE_CLANG_FORMAT` are **ON** by default, so a plain
+`cmake --build .` enforces both checks. To skip them during rapid iteration:
 
 ```shell
-cmake -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON ..
+cmake -DENABLE_CLANG_TIDY=OFF -DENABLE_CLANG_FORMAT=OFF ..
 cmake --build .
 ```
-
-`ENABLE_CLANG_TIDY` is **OFF** by default so that developer iterations stay fast. It is
-recommended to enable it before opening a Pull Request.
 
 Both tools require clang 18 or newer (matching the project's compiler baseline).
 
@@ -49,12 +47,12 @@ Both tools require clang 18 or newer (matching the project's compiler baseline).
 
 The project targets **C++23**.  Key implications:
 
-- `std::expected` (from `<expected>`) is used directly; the `tl::expected` package
-  is no longer required.  It is kept as an optional fallback for older toolchains
-  via `#ifdef __cpp_lib_expected` guards already present in the headers.
+- `std::expected` (from `<expected>`) is used directly.
 - Compiler: GCC 13+, Clang 16+, or MSVC 19.38+ are needed for full C++23 support.
 - CMake feature requirement: `cxx_std_23` — older compilers will be rejected at
   configure time.
+- CMake minimum version: **3.20** (first release to recognise `CMAKE_CXX_STANDARD 23`
+  and the `cxx_std_23` compile feature).
 
 ## Contributing
 
